@@ -645,7 +645,7 @@ pub fn (mut ls Vls) completion(params lsp.CompletionParams, mut wr ResponseWrite
 
 	uri := params.text_document.uri.normalize()
 	file := ls.files[uri]
-	root_node := file.tree.root_node()
+	root_node := file.tree.tree.root_node()
 	pos := params.position
 	mut offset := file.get_offset(pos.line, pos.character)
 	if offset == -1 {

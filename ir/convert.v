@@ -5,7 +5,7 @@ import tree_sitter_v as v
 
 __global counter = 0
 
-pub fn convert_file(node Node, text tree_sitter.SourceText) File {
+pub fn convert_file(tree tree_sitter.Tree[v.NodeType], node Node, text tree_sitter.SourceText) File {
 	module_clause := field_opt(node, 'module_clause') or { Node{} }
 
 	stmts_node := field(node, 'stmts')
@@ -19,6 +19,7 @@ pub fn convert_file(node Node, text tree_sitter.SourceText) File {
 
 	return File{
 		id: counter++
+		tree: tree
 		node: node
 		module_clause: convert_node(module_clause, text) or {
 			panic('can\'t convert node ${node.type_name}')
@@ -106,6 +107,9 @@ fn convert_node(node Node, text tree_sitter.SourceText) ?IrNode {
 		}
 		.function_declaration {
 			return convert_function_declaration(node, text)
+		}
+		.parameter_declaration {
+			return convert_parameter_declaration(node, text)
 		}
 		.module_clause {
 			return convert_module_clause(node, text)

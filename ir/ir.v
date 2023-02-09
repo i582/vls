@@ -3,6 +3,20 @@ module ir
 import tree_sitter
 import tree_sitter_v as v
 
+struct Pos {
+pub:
+	offset u32
+	len    u32
+	start  Point
+	end    Point
+}
+
+struct Point {
+pub:
+	line u32
+	col  u32
+}
+
 type Node = tree_sitter.Node[v.NodeType]
 
 pub type ID = int
@@ -30,6 +44,8 @@ fn (n NullNode) accept(mut visitor Visitor) bool {
 }
 
 pub struct File {
+pub:
+	tree          tree_sitter.Tree[v.NodeType]
 	id            ID
 	node          Node
 	module_clause IrNode
@@ -155,8 +171,8 @@ fn (i ImportPath) accept(mut visitor Visitor) bool {
 
 pub struct ImportAlias {
 pub:
-	id    ID
-	node  Node
+	id   ID
+	node Node
 	name string
 }
 

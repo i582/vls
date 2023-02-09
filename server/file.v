@@ -1,14 +1,14 @@
 module server
 
-import ast
 import lsp
 import structures.ropes
+import ir
 
 struct File {
 mut:
 	uri     lsp.DocumentUri
 	source  &ropes.Rope
-	tree    &ast.Tree       [required]
+	tree    ir.File       [required]
 	version int = 1
 }
 

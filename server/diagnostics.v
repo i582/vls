@@ -160,7 +160,7 @@ fn (mut ls Vls) exec_v_diagnostics(uri lsp.DocumentUri) ?int {
 		}
 
 		if file := ls.files[report.file_path] {
-			root_node := file.tree.root_node()
+			root_node := file.tree.tree.root_node()
 			node_point := report.range.start_point
 			if target_node := root_node.descendant_for_point_range(node_point, node_point) {
 				report = Report{

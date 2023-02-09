@@ -58,7 +58,7 @@ fn test_symbol_registration() {
 
 		println(bench.step_message('Testing $test_name'))
 		tree := p.parse_string(source: src)
-		mut cursor := new_tree_cursor(tree.root_node())
+		mut cursor := new_tree_cursor(tree.tree.root_node())
 		sym_analyzer.context = store.with(file_path: test_file_path, text: Runes(src.runes()))
 		import_modules_from_tree(sym_analyzer.context, tree, vlib_path)
 		mut formatter := sym_analyzer.context.symbol_formatter(false)

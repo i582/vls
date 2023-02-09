@@ -12,7 +12,7 @@ const temp_formatting_file_path = os.join_path(os.temp_dir(), 'vls_temp_formatti
 pub fn (mut ls Vls) formatting(params lsp.DocumentFormattingParams, mut wr ResponseWriter) ![]lsp.TextEdit {
 	uri := params.text_document.uri.normalize()
 	source := ls.files[uri].source
-	tree_range := ls.files[uri].tree.root_node().range()
+	tree_range := ls.files[uri].tree.tree.root_node().range()
 	if source.len() == 0 {
 		return error('none')
 	}
@@ -150,7 +150,7 @@ pub fn (mut ls Vls) signature_help(params lsp.SignatureHelpParams, mut wr Respon
 	ctx := params.context
 	file := ls.files[uri] or { return none }
 	off := file.get_offset(pos.line, pos.character)
-	mut node := traverse_node(file.tree.root_node(), u32(off))
+	mut node := traverse_node(file.tree.tree.root_node(), u32(off))
 	mut parent_node := node
 	if node.type_name == .argument_list {
 		parent_node = node.parent() or { node }
@@ -226,7 +226,7 @@ pub fn (mut ls Vls) signature_help(params lsp.SignatureHelpParams, mut wr Respon
 pub fn (mut ls Vls) folding_range(params lsp.FoldingRangeParams, mut wr ResponseWriter) ?[]lsp.FoldingRange {
 	uri := params.text_document.uri.normalize()
 	file := ls.files[uri] or { return none }
-	root_node := file.tree.root_node()
+	root_node := file.tree.tree.root_node()
 
 	mut folding_ranges := []lsp.FoldingRange{}
 	mut imports_seen := false
@@ -333,7 +333,7 @@ pub fn (mut ls Vls) definition(params lsp.TextDocumentPositionParams, mut wr Res
 	file := ls.files[uri] or { return none }
 	source := file.source
 	offset := compute_offset(source, pos.line, pos.character)
-	mut node := traverse_node(file.tree.root_node(), u32(offset))
+	mut node := traverse_node(file.tree.tree.root_node(), u32(offset))
 	mut original_range := node.range()
 	node_type_name := node.type_name
 	if parent_node := node.parent() {
@@ -409,7 +409,7 @@ pub fn (mut ls Vls) implementation(params lsp.TextDocumentPositionParams, mut wr
 	file := ls.files[uri] or { return none }
 	source := file.source
 	offset := file.get_offset(pos.line, pos.character)
-	mut node := traverse_node(file.tree.root_node(), u32(offset))
+	mut node := traverse_node(file.tree.tree.root_node(), u32(offset))
 	mut original_range := node.range()
 	node_type_name := node.type_name
 	if parent_node := node.parent() {

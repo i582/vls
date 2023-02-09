@@ -5,14 +5,50 @@ import os
 import analyzer
 import ast
 import tree_sitter
+import ir
 
 pub fn (mut ls Vls) hover(params lsp.HoverParams, mut wr ResponseWriter) ?lsp.Hover {
 	uri := params.text_document.uri.normalize()
 	pos := params.position
 	file := ls.files[uri] or { return none }
+
 	offset := file.get_offset(pos.line, pos.character)
-	node := traverse_node(file.tree.root_node(), u32(offset))
-	return get_hover_data(mut ls.store, node, uri, file.source, u32(offset))
+	el := ir.find_element_at(file.tree, offset)
+	println(el.node)
+	el_pos := ir.node_pos(el)
+
+	if el is ir.Identifier {
+
+		parent := ir.node_parent(el, file.source)
+
+		text := if parent is ir.FunctionDeclaration {
+			"fn ${el.value}"
+		} else if parent is ir.ParameterDeclaration {
+			"param ${el.value}"
+		} else {
+			el.value
+		}
+
+		range := lsp.Range{
+			start: lsp.Position{
+				line: int(el_pos.start.line)
+				character: int(el_pos.start.col)
+			}
+			end: lsp.Position{
+				line: int(el_pos.end.line)
+				character: int(el_pos.end.col)
+			}
+		}
+		return lsp.Hover{
+			contents: lsp.hover_markdown_string(text)
+			range: range
+		}
+	}
+
+
+	// node := traverse_node(file.tree.tree.root_node(), u32(offset))
+	// return get_hover_data(mut ls.store, node, uri, file.source, u32(offset))
+	return none
 }
 
 fn get_hover_data(mut store analyzer.Store, node ast.Node, uri lsp.DocumentUri, source tree_sitter.SourceText, offset u32) ?lsp.Hover {

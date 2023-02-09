@@ -64,7 +64,7 @@ fn test_semantic_analysis() {
 		}
 
 		tree := p.parse_string(source: src)
-		mut cursor := new_tree_cursor(tree.root_node())
+		mut cursor := new_tree_cursor(tree.tree.root_node())
 
 		import_modules_from_tree(context, tree, vlib_path)
 

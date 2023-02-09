@@ -93,7 +93,7 @@ fn test_analyzer_from_v() {
 		input_file_runes := input_file_content.runes()
 		tree := p.parse_string(source: input_file_content)
 		file_name := os.base(input_file_path)
-		cursor := new_tree_cursor(tree.root_node())
+		cursor := new_tree_cursor(tree.tree.root_node())
 
 		store.set_active_file_path(input_file_path, 1)
 		store.import_modules_from_tree(tree, input_file_runes)

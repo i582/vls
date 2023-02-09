@@ -5,30 +5,54 @@ import os
 import analyzer
 import structures.ropes
 import tree_sitter_v as v
+import ir
 
 fn (mut ls Vls) analyze_file(file File, affected_node_type v.NodeType, affected_line u32) {
 	if Feature.v_diagnostics in ls.enabled_features {
 		ls.reporter.clear(file.uri)
 	}
 
+	ls.writer.publish_diagnostics(
+		uri: file.uri
+		diagnostics: [
+			lsp.Diagnostic{
+				range: lsp.Range{
+					start: lsp.Position{
+						line: 8
+						character: 2
+					}
+					end: lsp.Position{
+						line: 8
+						character: 10
+					}
+				}
+				severity: lsp.DiagnosticSeverity.error
+				code: ''
+				source: ''
+				message: 'Hello'
+				related_information: []
+			},
+		]
+	)
+
 	is_import := affected_node_type == .import_declaration
 	file_path := file.uri.path()
 	context := ls.store.with(file_path: file_path, file_version: file.version, text: file.source)
 
 	// skip analyzing imports when affected is not an import declaration
-	if is_import || affected_line == 0 {
-		analyzer.import_modules_from_tree(context, file.tree, os.join_path(file.uri.dir_path(),
-			'modules'), ls.root_uri.path(), os.dir(os.dir(file_path)))
+	// if is_import || affected_line == 0 {
+	// 	analyzer.import_modules_from_tree(context, file.tree, os.join_path(file.uri.dir_path(),
+	// 		'modules'), ls.root_uri.path(), os.dir(os.dir(file_path)))
+	//
+	// 	ls.store.cleanup_imports(file.uri.dir_path())
+	// }
 
-		ls.store.cleanup_imports(file.uri.dir_path())
-	}
+	// ls.store.register_symbols_from_tree(context, file.tree, false, start_line_nr: affected_line)
+	// if !is_import && Feature.analyzer_diagnostics in ls.enabled_features {
+	// 	ls.store.analyze(context, file.tree, start_line_nr: affected_line)
+	// }
 
-	ls.store.register_symbols_from_tree(context, file.tree, false, start_line_nr: affected_line)
-	if !is_import && Feature.analyzer_diagnostics in ls.enabled_features {
-		ls.store.analyze(context, file.tree, start_line_nr: affected_line)
-	}
-
-	ls.reporter.publish(mut ls.writer, file.uri)
+	// ls.reporter.publish(mut ls.writer, file.uri)
 }
 
 pub fn (mut ls Vls) did_open(params lsp.DidOpenTextDocumentParams, mut wr ResponseWriter) {
@@ -36,68 +60,93 @@ pub fn (mut ls Vls) did_open(params lsp.DidOpenTextDocumentParams, mut wr Respon
 	src := params.text_document.text
 	uri := params.text_document.uri.normalize()
 	project_dir := uri.dir_path()
-	mut should_scan_whole_dir := false
+	// mut should_scan_whole_dir := false
+	//
+	// // should_scan_whole_dir is toggled if
+	// // - it's V file ending with .v format
+	// // - the project directory does not end with a dot (.)
+	// // - and has not been present in the dependency tree
+	// if uri.ends_with('.v') && project_dir != '.' && !ls.store.dependency_tree.has(project_dir) {
+	// 	should_scan_whole_dir = true
+	// }
+	//
+	// mut files_to_analyze := if should_scan_whole_dir { os.ls(project_dir) or {
+	// 		[
+	// 			uri.path(),
+	// 		]} } else { [
+	// 		uri.path(),
+	// 	] }
 
-	// should_scan_whole_dir is toggled if
-	// - it's V file ending with .v format
-	// - the project directory does not end with a dot (.)
-	// - and has not been present in the dependency tree
-	if uri.ends_with('.v') && project_dir != '.' && !ls.store.dependency_tree.has(project_dir) {
-		should_scan_whole_dir = true
+	// for file_name in files_to_analyze {
+	// 	if should_scan_whole_dir && !analyzer.should_analyze_file(file_name) {
+	// 		continue
+	// 	}
+	//
+	// 	file_path := if file_name.starts_with(project_dir) {
+	// 		file_name
+	// 	} else {
+	// 		os.join_path(project_dir, file_name)
+	// 	}
+	// 	file_uri := lsp.document_uri_from_path(file_path)
+	//
+	// 	mut has_file := file_uri in ls.files
+	// 	mut should_be_analyzed := has_file
+	//
+	// 	// Create file only if source does not exist
+	// 	if !has_file {
+	// 		source_str := if file_uri != uri { os.read_file(file_path) or { '' } } else { src }
+	// 		ls.files[file_uri] = File{
+	// 			uri: file_uri
+	// 			source: ropes.new(source_str)
+	// 			tree: ls.parser.parse_string(source: source_str)
+	// 			version: 1
+	// 		}
+	//
+	// 		has_file = true
+	// 	}
+	//
+	// 	// If data about the document/file has recently been created,
+	// 	// mark it as "should_be_analyzed" (hence the variable name).
+	// 	if !should_be_analyzed && has_file {
+	// 		should_be_analyzed = true
+	// 	}
+	//
+	// 	// Analyze only if both source and tree exists
+	// 	if should_be_analyzed {
+	// 		ls.analyze_file(ls.files[file_uri], .unknown, 0)
+	// 	}
+	//
+	// 	// wr.log_message('$file_uri | has_file: $has_file | should_be_analyzed: $should_be_analyzed',
+	// 	// 	.info)
+	// }
+
+	file_name := uri.path()
+	file_path := if file_name.starts_with(project_dir) {
+		file_name
+	} else {
+		os.join_path(project_dir, file_name)
 	}
 
-	mut files_to_analyze := if should_scan_whole_dir { os.ls(project_dir) or {
-			[
-				uri.path(),
-			]} } else { [
-			uri.path(),
-		] }
+	file_uri := lsp.document_uri_from_path(file_path)
 
-	for file_name in files_to_analyze {
-		if should_scan_whole_dir && !analyzer.should_analyze_file(file_name) {
-			continue
-		}
+	source_str := if file_uri != uri { os.read_file(file_path) or { '' } } else { src }
 
-		file_path := if file_name.starts_with(project_dir) {
-			file_name
-		} else {
-			os.join_path(project_dir, file_name)
-		}
-		file_uri := lsp.document_uri_from_path(file_path)
+	rope := ropes.new(source_str)
 
-		mut has_file := file_uri in ls.files
-		mut should_be_analyzed := has_file
+	mut parser := ir.new_parser()
+	tree := parser.parse_string(source: source_str)
+	root := tree.root_node()
+	file := ir.convert_file(tree, root, rope)
 
-		// Create file only if source does not exist
-		if !has_file {
-			source_str := if file_uri != uri { os.read_file(file_path) or { '' } } else { src }
-			ls.files[file_uri] = File{
-				uri: file_uri
-				source: ropes.new(source_str)
-				tree: ls.parser.parse_string(source: source_str)
-				version: 1
-			}
-
-			has_file = true
-		}
-
-		// If data about the document/file has recently been created,
-		// mark it as "should_be_analyzed" (hence the variable name).
-		if !should_be_analyzed && has_file {
-			should_be_analyzed = true
-		}
-
-		// Analyze only if both source and tree exists
-		if should_be_analyzed {
-			ls.analyze_file(ls.files[file_uri], .unknown, 0)
-		}
-
-		// wr.log_message('$file_uri | has_file: $has_file | should_be_analyzed: $should_be_analyzed',
-		// 	.info)
+	ls.files[file_uri] = File{
+		uri: file_uri
+		source: rope
+		tree: file
+		version: 1
 	}
 
-	ls.exec_v_diagnostics(uri) or {}
-	ls.reporter.publish(mut wr, uri)
+	// ls.exec_v_diagnostics(uri) or {}
+	// ls.reporter.publish(mut wr, uri)
 }
 
 pub fn (mut ls Vls) did_change(params lsp.DidChangeTextDocumentParams, mut wr ResponseWriter) {
@@ -107,11 +156,11 @@ pub fn (mut ls Vls) did_change(params lsp.DidChangeTextDocumentParams, mut wr Re
 		ls.parser.reset()
 	}
 
-	ls.store.delete_symbol_at_node(uri.path(), ls.files[uri].tree.root_node(), ls.files[uri].source,
-		u32(params.content_changes.first().range.start.line), u32(params.content_changes.last().range.start.line))
+	// ls.store.delete_symbol_at_node(uri.path(), ls.files[uri].tree.tree.root_node(), ls.files[uri].source,
+	// 	u32(params.content_changes.first().range.start.line), u32(params.content_changes.last().range.start.line))
 
 	mut new_src := ls.files[uri].source
-	mut new_tree := ls.files[uri].tree.raw_tree.copy()
+	mut new_tree := ls.files[uri].tree.tree.raw_tree.copy()
 	mut first_affected_start_offset := u32(0)
 
 	for change_i, content_change in params.content_changes {
@@ -153,13 +202,17 @@ pub fn (mut ls Vls) did_change(params lsp.DidChangeTextDocumentParams, mut wr Re
 	new_src = new_src.rebalance_if_needed()
 	// wr.log_message('${ls.files[uri].tree.get_changed_ranges(new_tree)}', .info)
 
-	// wr.log_message('new tree: ${new_tree.root_node().sexpr_str()}', .info)
-	ls.files[uri].tree = ls.parser.parse_string(source: new_src.string(), tree: new_tree)
+	// wr.log_message('new tree: ${new_tree.tree.root_node().sexpr_str()}', .info)
+	tree := ls.parser.parse_string(source: new_src.string(), tree: new_tree)
+	root := tree.root_node()
+	file := ir.convert_file(tree, root, new_src)
+
+	ls.files[uri].tree = file
 	ls.files[uri].source = new_src
 	ls.files[uri].version = params.text_document.version
 
 	// record last first content change line for partial analysis
-	if first_affected_direct_node := ls.files[uri].tree.root_node().first_named_child_for_byte(first_affected_start_offset) {
+	if first_affected_direct_node := ls.files[uri].tree.node.first_named_child_for_byte(first_affected_start_offset) {
 		ls.last_modified_line = first_affected_direct_node.raw_node.start_point().row
 		ls.last_affected_node = first_affected_direct_node.type_name
 	} else {
