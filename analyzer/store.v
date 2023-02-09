@@ -480,12 +480,12 @@ pub fn symbol_name_from_node(node ast.Node, src_text tree_sitter.SourceText) (Sy
 		.function_type, .fn_literal {
 			return SymbolKind.function_type, module_name, symbol_name
 		}
-		.variadic_type {
-			if child_type_node := node.named_child(0) {
-				_, module_name, symbol_name = symbol_name_from_node(child_type_node, src_text)
-			}
-			return SymbolKind.variadic, module_name, '...' + symbol_name
-		}
+		// .variadic_type {
+		// 	if child_type_node := node.named_child(0) {
+		// 		_, module_name, symbol_name = symbol_name_from_node(child_type_node, src_text)
+		// 	}
+		// 	return SymbolKind.variadic, module_name, '...' + symbol_name
+		// }
 		.multi_return_type {
 			return SymbolKind.multi_return, '', node.text(src_text)
 		}
@@ -679,7 +679,7 @@ pub fn (mut ss Store) infer_symbol_from_node(file_path string, node ast.Node, sr
 				return error('not found')
 			}
 		}
-		.type_identifier, .array, .array_type, .map_type, .pointer_type, .variadic_type,
+		.type_identifier, .array, .array_type, .map_type, .pointer_type,
 		.builtin_type, .channel_type, .fn_literal {
 			return ss.find_symbol_by_type_node(file_path, node, src_text) or {
 				return error('not found')

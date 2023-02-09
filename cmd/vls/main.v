@@ -2,8 +2,6 @@ module main
 
 import structures.ropes
 import cmd.ir
-import toml.ast
-import datatypes
 
 struct MyVisitor {
 }
@@ -22,15 +20,18 @@ fn (m MyVisitor) visit(node ir.IrNode) bool {
 	return true
 }
 
-struct SymbolRegistratorResolver {
+struct SymbolRegistrator {
 mut:
 	functions map[string]ir.FunctionDeclaration
 }
 
-fn (mut m SymbolRegistratorResolver) visit(node ir.IrNode) bool {
+fn (mut m SymbolRegistrator) visit(node ir.IrNode) bool {
 	match node {
 		ir.FunctionDeclaration {
 			m.functions[node.name.value] = node
+		}
+		ir.ImportDeclaration {
+			println('import ${node.spec.path.value}')
 		}
 		else {}
 	}
@@ -82,7 +83,8 @@ fn (mut a MismatchTypeInspection) visit(node ir.IrNode) bool {
 				if argument_types[i] != parameter_types[i] {
 					a.errors << '
 					Type missmatch when call function ${name}. 
-					Expected #${i + 1} argument of type ${parameter_types[i]}, got ${argument_types[i]}
+					Expected #${
+						i + 1} argument of type ${parameter_types[i]}, got ${argument_types[i]}
 					'.trim_indent()
 				}
 			}
@@ -99,9 +101,6 @@ mut:
 
 fn (mut m TypeInferrer) visit(node ir.IrNode) bool {
 	match node {
-		ir.ParameterDeclaration {
-			m.types[node.id] = node.typ.readable_name()
-		}
 		ir.StringLiteral {
 			m.types[node.id] = 'string'
 		}
@@ -125,7 +124,12 @@ struct Context {
 
 fn main() {
 	code := '
-fn printf(s string, arg2 int) {}
+module main
+
+import os
+import math as m
+
+fn printf(s string, arg2 ...int) {}
 
 fn main(name string, age int) {
 	printf("Hello, World!", "error")
@@ -137,13 +141,12 @@ fn main(name string, age int) {
 	tree := parser.parse_string(source: code)
 
 	root := tree.root_node()
-	// println(root)
+	println(root)
 	file := ir.convert_file(root, rope)
 
-	// visitor := MyVisitor{}
-	// ir.IrNode(file).accept(visitor)
+	println(file)
 
-	mut resolver := SymbolRegistratorResolver{}
+	mut resolver := SymbolRegistrator{}
 	file.accept(mut resolver)
 
 	mut inferrer := TypeInferrer{}
@@ -155,8 +158,12 @@ fn main(name string, age int) {
 	}
 
 	mut inspections := []Inspection{}
-	inspections << ArgumentMismatchInspection{ctx: ctx}
-	inspections << MismatchTypeInspection{ctx: ctx}
+	inspections << ArgumentMismatchInspection{
+		ctx: ctx
+	}
+	inspections << MismatchTypeInspection{
+		ctx: ctx
+	}
 
 	for inspection in inspections {
 		mut visitor := inspection as ir.Visitor

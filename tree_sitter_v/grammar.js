@@ -254,10 +254,24 @@ module.exports = grammar({
 
   rules: {
     source_file: ($) =>
-      repeat(
-        seq(
-          choice($._top_level_declaration, $._statement),
-          optional($._automatic_separator)
+      seq(
+        optional(field("module_clause", $.module_clause)),
+        optional(
+          field(
+            "imports",
+            repeat(
+              $.import_declaration,
+            )
+          )
+        ),
+        field(
+          "stmts",
+          repeat(
+            seq(
+              choice($._top_level_declaration, $._statement),
+              optional($._automatic_separator)
+            )
+          ),
         )
       ),
 
@@ -271,8 +285,6 @@ module.exports = grammar({
         alias($._binded_struct_declaration, $.struct_declaration),
         $.enum_declaration,
         $.interface_declaration,
-        $.import_declaration,
-        $.module_clause
       ),
 
     _expression: ($) =>
@@ -503,8 +515,8 @@ module.exports = grammar({
     element: ($) => $._expression,
 
     keyed_element: ($) => seq(
-      field("name", $._element_key), 
-      ":", 
+      field("name", $._element_key),
+      ":",
       field("value", $._expression)
     ),
 
@@ -612,13 +624,13 @@ module.exports = grammar({
         $.interpreted_string_literal
       ),
 
-    c_string_literal: ($) => 
+    c_string_literal: ($) =>
       interpolated_quoted_string($, $._c_string_opening),
 
-    raw_string_literal: ($) => 
+    raw_string_literal: ($) =>
       quoted_string($, $._raw_string_opening),
 
-    interpreted_string_literal: ($) => 
+    interpreted_string_literal: ($) =>
       interpolated_quoted_string($, $._string_opening),
 
     string_interpolation: ($) =>
@@ -747,14 +759,14 @@ module.exports = grammar({
     _expression_list_repeat1: ($) =>
       seq(
         choice(
-          $._expression, 
+          $._expression,
           $.mutable_expression
-        ), 
+        ),
         repeat1(
           seq(
-            ",", 
+            ",",
             choice(
-              $._expression, 
+              $._expression,
               $.mutable_expression
             )
           )
@@ -764,7 +776,8 @@ module.exports = grammar({
     parameter_declaration: ($) =>
       seq(
         field("name", choice($.mutable_identifier, $.identifier, $._reserved_identifier)),
-        field("type", choice($._simple_type, $.option_type, $.variadic_type))
+        optional(field("variadic", "...")),
+        field("type", choice($._simple_type, $.option_type))
       ),
 
     parameter_list: ($) =>
@@ -941,7 +954,7 @@ module.exports = grammar({
 
     assert_statement: ($) => seq(assert_keyword, $._expression),
 
-    block: ($) => 
+    block: ($) =>
       seq(
         "{",
         optional(choice(
@@ -1007,7 +1020,8 @@ module.exports = grammar({
     type_parameter_declaration: ($) =>
       seq(
         optional(mut_keyword),
-        field("type", choice($._simple_type, $.option_type, $.variadic_type))
+        optional(field("variadic", "...")),
+        field("type", choice($._simple_type, $.option_type))
       ),
 
     fn_literal: ($) =>
@@ -1058,8 +1072,8 @@ module.exports = grammar({
 
     const_spec: ($) =>
       seq(
-        field("name", choice($.identifier, alias($._old_identifier, $.identifier))), 
-        "=", 
+        field("name", choice($.identifier, alias($._old_identifier, $.identifier))),
+        "=",
         field("value", $._expression)
       ),
 
@@ -1357,7 +1371,7 @@ module.exports = grammar({
         )
       ),
 
-    _binded_struct_declaration: ($) => 
+    _binded_struct_declaration: ($) =>
       seq(
         field("attributes", optional($.attribute_list)),
         optional(pub_keyword),
@@ -1372,9 +1386,9 @@ module.exports = grammar({
         repeat(
           seq(
             choice(
-              $.struct_field_scope, 
+              $.struct_field_scope,
               alias(
-                $._binded_struct_field_declaration, 
+                $._binded_struct_field_declaration,
                 $.struct_field_declaration
               )
             ),
@@ -1489,14 +1503,14 @@ module.exports = grammar({
           // Adds a space in order to avoid import_path
           // getting parsed on other lines
           " ",
-          field("path", $.import_path),
+          field("import_path", $.import_path),
           optional(
             seq(
               // Same as well for aliases and symbols. Although
               // the contents inside the braces are allowed as per testing.
               " ",
               choice(
-                field("alias", $.import_alias),
+                field("import_alias", $.import_alias),
                 field("symbols", $.import_symbols)
               )
             )
@@ -1590,7 +1604,7 @@ function comma_sep(rule) {
 }
 
 function interpolated_quoted_string($, opening) {
-  return quoted_string($, 
+  return quoted_string($,
     opening,
     $.escape_sequence,
     $.string_interpolation,

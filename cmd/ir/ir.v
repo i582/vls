@@ -7,6 +7,8 @@ type Node = tree_sitter.Node[v.NodeType]
 
 pub type ID = int
 
+pub const null_node = NullNode{}
+
 pub interface IrNode {
 	id ID
 	node Node
@@ -17,14 +19,34 @@ pub interface Stmt {
 	stmt()
 }
 
+pub struct NullNode {
+pub:
+	id   ID = -1
+	node Node
+}
+
+fn (n NullNode) accept(mut visitor Visitor) bool {
+	return visitor.visit(n)
+}
+
 pub struct File {
-	id    ID
-	node  Node
-	stmts []IrNode
+	id            ID
+	node          Node
+	module_clause IrNode
+	imports       ImportList
+	stmts         []IrNode
 }
 
 pub fn (f File) accept(mut visitor Visitor) bool {
 	if !visitor.visit(f) {
+		return false
+	}
+
+	if !f.module_clause.accept(mut visitor) {
+		return false
+	}
+
+	if !f.imports.accept(mut visitor) {
 		return false
 	}
 
@@ -35,6 +57,111 @@ pub fn (f File) accept(mut visitor Visitor) bool {
 	}
 
 	return true
+}
+
+pub struct ModuleClause {
+pub:
+	id   ID
+	node Node
+	name Identifier
+}
+
+fn (m ModuleClause) accept(mut visitor Visitor) bool {
+	if !visitor.visit(m) {
+		return false
+	}
+
+	if !m.name.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+pub struct ImportList {
+pub:
+	id      ID
+	node    Node
+	imports []ImportDeclaration
+}
+
+fn (i ImportList) accept(mut visitor Visitor) bool {
+	if !visitor.visit(i) {
+		return false
+	}
+
+	for imp in i.imports {
+		if !imp.accept(mut visitor) {
+			return false
+		}
+	}
+
+	return true
+}
+
+pub struct ImportDeclaration {
+pub:
+	id   ID
+	node Node
+	spec ImportSpec
+}
+
+fn (i ImportDeclaration) accept(mut visitor Visitor) bool {
+	if !visitor.visit(i) {
+		return false
+	}
+
+	if !i.spec.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+pub struct ImportSpec {
+pub:
+	id    ID
+	node  Node
+	path  ImportPath
+	alias IrNode
+}
+
+fn (i ImportSpec) accept(mut visitor Visitor) bool {
+	if !visitor.visit(i) {
+		return false
+	}
+
+	if !i.path.accept(mut visitor) {
+		return false
+	}
+
+	if !i.alias.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+pub struct ImportPath {
+pub:
+	id    ID
+	node  Node
+	value string
+}
+
+fn (i ImportPath) accept(mut visitor Visitor) bool {
+	return visitor.visit(i)
+}
+
+pub struct ImportAlias {
+pub:
+	id    ID
+	node  Node
+	name string
+}
+
+fn (i ImportAlias) accept(mut visitor Visitor) bool {
+	return visitor.visit(i)
 }
 
 pub struct Identifier {
@@ -100,10 +227,11 @@ fn (p ParameterList) accept(mut visitor Visitor) bool {
 
 pub struct ParameterDeclaration {
 pub:
-	id   ID
-	node Node
-	name Identifier
-	typ  Type
+	id          ID
+	node        Node
+	name        Identifier
+	typ         Type
+	is_variadic bool
 }
 
 fn (p ParameterDeclaration) accept(mut visitor Visitor) bool {

@@ -140,7 +140,6 @@ pub enum NodeType {
 	type_selector_expression
 	unary_expression
 	unsafe_expression
-	variadic_type
 	escape_sequence
 	false_
 	field_identifier
@@ -241,9 +240,7 @@ const supertype__top_level_declaration_nodes = [
 	.enum_declaration,
 	.function_declaration,
 	.global_var_declaration,
-	.import_declaration,
 	.interface_declaration,
-	.module_clause,
 	.struct_declaration,
 	.type_declaration
 ]
@@ -445,7 +442,6 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'type_selector_expression' { NodeType.type_selector_expression }
 		'unary_expression' { NodeType.unary_expression }
 		'unsafe_expression' { NodeType.unsafe_expression }
-		'variadic_type' { NodeType.variadic_type }
 		'escape_sequence' { NodeType.escape_sequence }
 		'false' { NodeType.false_ }
 		'field_identifier' { NodeType.field_identifier }
