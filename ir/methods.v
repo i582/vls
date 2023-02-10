@@ -5,10 +5,10 @@ import tree_sitter
 struct Finder {
 	pos int
 mut:
-	found []IrNode = [null_node]
+	found []Node = [null_node]
 }
 
-fn (mut f Finder) visit(node IrNode) bool {
+fn (mut f Finder) visit(node Node) bool {
 	pos := node_pos(node)
 	offset := pos.offset
 	len := pos.len
@@ -19,14 +19,14 @@ fn (mut f Finder) visit(node IrNode) bool {
 	return true
 }
 
-pub fn find_element_at(node IrNode, pos int) IrNode {
+pub fn find_element_at(node Node, pos int) Node {
 	mut finder := Finder{pos: pos}
 	node.accept(mut finder)
 
 	return finder.found.last()
 }
 
-pub fn node_pos(n IrNode) Pos {
+pub fn node_pos(n Node) Pos {
 	start := n.node.start_point()
 	end := n.node.end_point()
 	return Pos{
@@ -43,7 +43,7 @@ pub fn node_pos(n IrNode) Pos {
 	}
 }
 
-pub fn node_parent(n IrNode, text tree_sitter.SourceText) IrNode {
+pub fn node_parent(n Node, text tree_sitter.SourceText) Node {
 	parent := n.node.parent() or { return null_node }
-	return convert_node(parent, text) or { return null_node }
+	return convert_node(parent, text)
 }

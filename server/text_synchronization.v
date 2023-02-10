@@ -2,7 +2,6 @@ module server
 
 import lsp
 import os
-import analyzer
 import structures.ropes
 import tree_sitter_v as v
 import ir

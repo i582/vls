@@ -86,6 +86,7 @@ pub enum NodeType {
 	is_expression
 	keyed_element
 	labeled_statement
+	literal
 	literal_value
 	lock_expression
 	map_
@@ -95,6 +96,8 @@ pub enum NodeType {
 	multi_return_type
 	mutable_expression
 	mutable_identifier
+	none_
+	none_type
 	option_propagator
 	option_type
 	or_block
@@ -127,7 +130,6 @@ pub enum NodeType {
 	string_interpolation
 	struct_declaration
 	struct_field_declaration
-	struct_field_declaration_list
 	struct_field_scope
 	thread_type
 	type_cast_expression
@@ -149,7 +151,7 @@ pub enum NodeType {
 	int_literal
 	label_name
 	module_identifier
-	none_
+	nil_
 	rune_literal
 	true_
 	type_identifier
@@ -161,28 +163,20 @@ const supertype__expression_nodes = merge(supertype__expression_with_blocks_node
 	.as_type_cast_expression,
 	.binary_expression,
 	.binded_identifier,
-	.c_string_literal,
 	.call_expression,
 	.empty_literal_value,
-	.false_,
 	.fixed_array,
-	.float_literal,
 	.fn_literal,
 	.identifier,
 	.index_expression,
-	.int_literal,
-	.interpreted_string_literal,
 	.is_expression,
+	.literal,
 	.map_,
-	.none_,
 	.parenthesized_expression,
 	.pseudo_comptime_identifier,
-	.raw_string_literal,
-	.rune_literal,
 	.selector_expression,
 	.slice_expression,
 	.special_call_expression,
-	.true_,
 	.type_cast_expression,
 	.type_initializer,
 	.type_selector_expression,
@@ -208,6 +202,7 @@ const supertype__simple_type_nodes = [
 	.function_type,
 	.generic_type,
 	.map_type,
+	.none_type,
 	.pointer_type,
 	.qualified_type,
 	.shared_type,
@@ -388,6 +383,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'is_expression' { NodeType.is_expression }
 		'keyed_element' { NodeType.keyed_element }
 		'labeled_statement' { NodeType.labeled_statement }
+		'literal' { NodeType.literal }
 		'literal_value' { NodeType.literal_value }
 		'lock_expression' { NodeType.lock_expression }
 		'map' { NodeType.map_ }
@@ -397,6 +393,8 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'multi_return_type' { NodeType.multi_return_type }
 		'mutable_expression' { NodeType.mutable_expression }
 		'mutable_identifier' { NodeType.mutable_identifier }
+		'none' { NodeType.none_ }
+		'none_type' { NodeType.none_type }
 		'option_propagator' { NodeType.option_propagator }
 		'option_type' { NodeType.option_type }
 		'or_block' { NodeType.or_block }
@@ -429,7 +427,6 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'string_interpolation' { NodeType.string_interpolation }
 		'struct_declaration' { NodeType.struct_declaration }
 		'struct_field_declaration' { NodeType.struct_field_declaration }
-		'struct_field_declaration_list' { NodeType.struct_field_declaration_list }
 		'struct_field_scope' { NodeType.struct_field_scope }
 		'thread_type' { NodeType.thread_type }
 		'type_cast_expression' { NodeType.type_cast_expression }
@@ -451,7 +448,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'int_literal' { NodeType.int_literal }
 		'label_name' { NodeType.label_name }
 		'module_identifier' { NodeType.module_identifier }
-		'none' { NodeType.none_ }
+		'nil' { NodeType.nil_ }
 		'rune_literal' { NodeType.rune_literal }
 		'true' { NodeType.true_ }
 		'type_identifier' { NodeType.type_identifier }

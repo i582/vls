@@ -366,7 +366,7 @@ pub fn (node C.TSNode) child_by_field_name(name string) ?C.TSNode {
 	if child.is_null() {
 		return IError(NodeError{
 			node: node
-			msg: "child '${name}' not found"
+			msg: "child '${name}' not found in ${node.type_name()}"
 		})
 	}
 

@@ -268,7 +268,7 @@ pub fn (mut ls Vls) folding_range(params lsp.FoldingRangeParams, mut wr Response
 				folding_ranges << create_fold(imports_range, lsp.folding_range_kind_imports)
 				imports_seen = true
 			}
-			.struct_field_declaration_list, .interface_spec_list, .enum_member_declaration_list {
+			.interface_spec_list, .enum_member_declaration_list {
 				folding_ranges << create_fold(node.range(), lsp.folding_range_kind_region)
 			}
 			// 'function_declaration' {

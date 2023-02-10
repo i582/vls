@@ -12,7 +12,7 @@ as NodeType.unknown.
 See: https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types
 */
 
-const to_be_escaped = ['none', 'true', 'false', 'map', 'type']
+const to_be_escaped = ['none', 'true', 'false', 'map', 'type', 'nil']
 
 fn escape_name(name string) string {
 	if name in to_be_escaped {

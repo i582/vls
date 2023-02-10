@@ -248,8 +248,10 @@ module.exports = grammar({
 
   conflicts: ($) => [
     [$.qualified_type, $._expression],
+    [$.fixed_array_type, $.literal],
     [$.fixed_array_type, $._expression],
     [$._binded_type, $._expression],
+    [$.none, $.none_type],
   ],
 
   rules: {
@@ -290,10 +292,6 @@ module.exports = grammar({
     _expression: ($) =>
       choice(
         $.empty_literal_value,
-        $.int_literal,
-        $.float_literal,
-        $._string_literal,
-        $.rune_literal,
         $._reserved_identifier,
         $.binded_identifier,
         $.identifier,
@@ -426,9 +424,7 @@ module.exports = grammar({
         choice(
           $.pseudo_comptime_identifier,
           $.type_selector_expression,
-          $.none,
-          $.true,
-          $.false
+          $.literal,
         )
       ),
 
@@ -454,9 +450,21 @@ module.exports = grammar({
         )
       ),
 
+    literal: ($) => choice(
+      $.int_literal,
+      $.float_literal,
+      $._string_literal,
+      $.rune_literal,
+      $.none,
+      $.true,
+      $.false,
+      $.nil,
+    ),
+
     none: ($) => none_keyword,
     true: ($) => "true",
     false: ($) => "false",
+    nil: ($) => "nil",
 
     spread_operator: ($) =>
       prec.right(
@@ -577,6 +585,8 @@ module.exports = grammar({
     shared_type: ($) => seq(shared_keyword, $._simple_type),
 
     thread_type: ($) => seq('thread', $._simple_type),
+
+    none_type: ($) => "none",
 
     int_literal: ($) => token(int_literal),
 
@@ -820,17 +830,17 @@ module.exports = grammar({
 
     option_type: ($) =>
       prec.right(
-        seq("?", optional(choice($._simple_type, $.multi_return_type)))
+        seq("?", optional($._type))
       ),
 
     result_type: ($) =>
       prec.right(
-        seq("!", optional(choice($._simple_type, $.multi_return_type)))
+        seq("!", optional($._type))
       ),
 
-    multi_return_type: ($) => seq("(", comma_sep1($._simple_type), ")"),
+    multi_return_type: ($) => seq("(", comma_sep1($._type), ")"),
 
-    type_list: ($) => comma_sep1($._simple_type),
+    type_list: ($) => comma_sep1($._type),
 
     _simple_type: ($) =>
       choice(
@@ -847,7 +857,8 @@ module.exports = grammar({
         $.map_type,
         $.channel_type,
         $.shared_type,
-        $.thread_type
+        $.thread_type,
+        $.none_type,
       ),
 
     type_parameters: ($) =>
@@ -1259,13 +1270,13 @@ module.exports = grammar({
         if_keyword,
         choice(
           field("condition", $._expression),
-          field("initializer", $.short_var_declaration)
+          field("guard", $.short_var_declaration)
         ),
-        field("consequence", $.block),
+        field("block", $.block),
         optional(
           seq(
             else_keyword,
-            field("alternative", choice($.block, $.if_expression))
+            field("else_branch", choice($.block, $.if_expression))
           )
         )
       ),
@@ -1282,7 +1293,7 @@ module.exports = grammar({
             $._expression
           )),
           choice(is_keyword, "!" + is_keyword),
-          field("right", choice($.option_type, $._simple_type, $.none))
+          field("right", choice($.option_type, $._simple_type))
         )
       ),
 
@@ -1325,17 +1336,20 @@ module.exports = grammar({
             )
           )
         ),
-        $.struct_field_declaration_list
+        $._struct_field_declaration_list
       ),
 
-    struct_field_declaration_list: ($) =>
+    _struct_field_declaration_list: ($) =>
       seq(
         "{",
-        repeat(
-          seq(
-            choice($.struct_field_scope, $.struct_field_declaration),
-            optional(terminator)
-          )
+        field(
+          "fields_groups",
+          repeat(
+            seq(
+              choice($.struct_field_scope, $.struct_field_declaration),
+              optional(terminator)
+            )
+          ),
         ),
         "}"
       ),
@@ -1377,10 +1391,10 @@ module.exports = grammar({
         optional(pub_keyword),
         choice(struct_keyword, union_keyword),
         field("name", prec.dynamic(PREC.composite_literal, $._binded_type)),
-        alias($._binded_struct_field_declaration_list, $.struct_field_declaration_list)
+        alias($._binded__struct_field_declaration_list, $._struct_field_declaration_list)
       ),
 
-    _binded_struct_field_declaration_list: ($) =>
+    _binded__struct_field_declaration_list: ($) =>
       seq(
         "{",
         repeat(
