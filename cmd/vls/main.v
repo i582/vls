@@ -1,7 +1,7 @@
 module main
 
 import ir
-import structures.ropes
+import parser
 
 // // TODO: make this return !, after `cli` is changed too
 // fn run_cli(cmd cli.Command) ! {
@@ -244,6 +244,7 @@ struct Context {
 }
 
 fn main() {
+
 	code := '
 	
 	struct Foo {
@@ -261,14 +262,9 @@ fn main() {
 	
 	// take_int(f)
 	'.trim_indent()
-	rope := ropes.new(code)
 
-	mut parser := ir.new_parser()
-	tree := parser.parse_string(source: code)
-
-	root := tree.root_node()
-	println(root)
-	file := ir.convert_file(tree, root, rope)
+	file := parser.parse_code(code)
+	println(file.node)
 	println(file)
 
 	mut resolver := SymbolRegistrator{}
@@ -278,6 +274,14 @@ fn main() {
 		symbols: resolver.symbols
 	}
 	file.accept(mut inferrer)
+
+	ir.inspect(file, fn (it ir.Node) bool {
+		if it is ir.FunctionDeclaration {
+			println(it.name.value)
+		}
+
+		return true
+	})
 
 	ctx := Context{
 		types: inferrer.types
