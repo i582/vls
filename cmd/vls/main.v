@@ -84,13 +84,23 @@ fn (m MyVisitor) visit(node ir.Node) bool {
 
 struct SymbolRegistrator {
 mut:
-	functions map[string]ir.FunctionDeclaration
+	symbols Symbols
 }
 
 fn (mut m SymbolRegistrator) visit(node ir.Node) bool {
 	match node {
 		ir.FunctionDeclaration {
-			m.functions[node.name.value] = node
+			m.symbols.functions[node.name.value] = node
+		}
+		ir.StructDeclaration {
+			m.symbols.structs[node.name.value] = node
+		}
+		ir.VarDeclaration {
+			for var in node.var_list.expressions {
+				if var is ir.Identifier {
+					m.symbols.vars[var.value] = node
+				}
+			}
 		}
 		ir.ImportDeclaration {
 			println('import ${node.spec.path.value}')
@@ -110,7 +120,7 @@ fn (mut a ArgumentMismatchInspection) visit(node ir.Node) bool {
 	match node {
 		ir.CallExpr {
 			name := node.name.value
-			fun := a.ctx.functions[name] or { return true }
+			fun := a.ctx.symbols.functions[name] or { return true }
 			arguments_count := node.args.args.len
 			arguments_count_expected := fun.parameters.parameters.len
 
@@ -119,14 +129,6 @@ fn (mut a ArgumentMismatchInspection) visit(node ir.Node) bool {
 				Argument missmatch for function `${name}`. 
 				Expected ${arguments_count_expected} arguments, got ${arguments_count}
 				'.trim_indent()
-			}
-		}
-		ir.StructDeclaration {
-			println('struct ${node.name.value}')
-			for group in node.groups {
-				for field in group.fields_ {
-					println('field ${field.name}: ${field.typ}')
-				}
 			}
 		}
 		else {}
@@ -144,7 +146,7 @@ fn (mut a MismatchTypeInspection) visit(node ir.Node) bool {
 	match node {
 		ir.CallExpr {
 			name := node.name.value
-			fun := a.ctx.functions[name] or { return true }
+			fun := a.ctx.symbols.functions[name] or { return true }
 
 			argument_types := node.args.args.map(a.ctx.types[it.expr.id])
 			parameter_types := fun.parameters.parameters.map(it.typ.readable_name())
@@ -165,6 +167,7 @@ fn (mut a MismatchTypeInspection) visit(node ir.Node) bool {
 }
 
 struct TypeInferrer {
+	symbols Symbols
 mut:
 	types map[ir.ID]string
 }
@@ -177,6 +180,21 @@ fn (mut m TypeInferrer) visit(node ir.Node) bool {
 		ir.IntegerLiteral {
 			m.types[node.id] = 'int'
 		}
+		ir.TypeInitializer {
+			typ := node.typ as ir.Type
+			m.types[node.id] = typ.readable_name()
+		}
+		ir.VarDeclaration {
+			mut expr := node.expression_list.expressions.first()
+			expr.accept(mut m)
+			m.types[node.id] = m.types[expr.id]
+		}
+		ir.Identifier {
+			if node.value in m.symbols.vars {
+				variable := m.symbols.vars[node.value]
+				m.types[node.id] = m.types[variable.id]
+			}
+		}
 		else {}
 	}
 	return true
@@ -187,45 +205,55 @@ interface Inspection {
 	errors []string
 }
 
-struct Context {
-	types     map[ir.ID]string
+struct Symbols {
+mut:
 	functions map[string]ir.FunctionDeclaration
+	structs   map[string]ir.StructDeclaration
+	vars      map[string]ir.VarDeclaration
+}
+
+struct Context {
+	types   map[ir.ID]string
+	symbols Symbols
 }
 
 fn main() {
 	code := '
 	
-	
-	fn main() {
-		if a := 100 {
-			println("1")
-		} else if 2 {
-			println("2")
-		} else {
-			println("else")
-		}
+	struct Foo {
+		name string
 	}
+
+	fn take_int(i int) {
+	}
+
+	f := Foo{
+		name: "foo"
+	}
+	
+	take_int(f)
 	'.trim_indent()
 	rope := ropes.new(code)
-
 
 	mut parser := ir.new_parser()
 	tree := parser.parse_string(source: code)
 
 	root := tree.root_node()
-	println(root)
+	// println(root)
 	file := ir.convert_file(tree, root, rope)
-	println(file)
+	// println(file)
 
 	mut resolver := SymbolRegistrator{}
 	file.accept(mut resolver)
 
-	mut inferrer := TypeInferrer{}
+	mut inferrer := TypeInferrer{
+		symbols: resolver.symbols
+	}
 	file.accept(mut inferrer)
 
 	ctx := Context{
 		types: inferrer.types
-		functions: resolver.functions
+		symbols: resolver.symbols
 	}
 
 	mut inspections := []Inspection{}

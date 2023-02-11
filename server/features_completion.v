@@ -211,25 +211,25 @@ fn (mut builder CompletionBuilder) build_suggestions_from_expr(node ast.Node) {
 				}
 			}
 		}
-		.literal_value {
-			closest_element_node := closest_named_child(node, u32(builder.offset))
-			if closest_element_node.type_name == .keyed_element {
-				builder.build_suggestions_from_expr(closest_element_node)
-			} else if parent_node := node.parent() {
-				if got_sym := builder.store.infer_symbol_from_node(builder.file_path,
-					parent_node, builder.src)
-				{
-					builder.build_suggestions_from_sym(got_sym, BuildSuggestionsFromSymParams{
-						filter_kinds: if got_sym.kind == .enum_ {
-							[.field]
-						} else {
-							[]analyzer.SymbolKind{}
-						}
-						prefix: if got_sym.kind in [.enum_, .field] { '.' } else { '' }
-					})
-				}
-			}
-		}
+		// .literal_value {
+		// 	closest_element_node := closest_named_child(node, u32(builder.offset))
+		// 	if closest_element_node.type_name == .keyed_element {
+		// 		builder.build_suggestions_from_expr(closest_element_node)
+		// 	} else if parent_node := node.parent() {
+		// 		if got_sym := builder.store.infer_symbol_from_node(builder.file_path,
+		// 			parent_node, builder.src)
+		// 		{
+		// 			builder.build_suggestions_from_sym(got_sym, BuildSuggestionsFromSymParams{
+		// 				filter_kinds: if got_sym.kind == .enum_ {
+		// 					[.field]
+		// 				} else {
+		// 					[]analyzer.SymbolKind{}
+		// 				}
+		// 				prefix: if got_sym.kind in [.enum_, .field] { '.' } else { '' }
+		// 			})
+		// 		}
+		// 	}
+		// }
 		.keyed_element {
 			if got_sym := builder.store.infer_symbol_from_node(builder.file_path, node,
 				builder.src)

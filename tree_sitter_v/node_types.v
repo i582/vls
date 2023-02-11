@@ -48,6 +48,7 @@ pub enum NodeType {
 	default_case
 	defer_statement
 	element
+	element_list
 	empty_literal_value
 	enum_declaration
 	enum_member
@@ -55,6 +56,7 @@ pub enum NodeType {
 	exposed_variables_list
 	expression_case
 	expression_list
+	field_name
 	fixed_array
 	fixed_array_type
 	fn_literal
@@ -74,6 +76,7 @@ pub enum NodeType {
 	if_expression
 	import_alias
 	import_declaration
+	import_list
 	import_symbols
 	import_symbols_list
 	inc_statement
@@ -110,6 +113,7 @@ pub enum NodeType {
 	qualified_type
 	range
 	raw_string_literal
+	reference_expression
 	result_type
 	return_statement
 	select_branch
@@ -118,6 +122,7 @@ pub enum NodeType {
 	selector_expression
 	send_statement
 	shared_type
+	short_element_list
 	simple_statement
 	slice_expression
 	source_file
@@ -345,6 +350,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'default_case' { NodeType.default_case }
 		'defer_statement' { NodeType.defer_statement }
 		'element' { NodeType.element }
+		'element_list' { NodeType.element_list }
 		'empty_literal_value' { NodeType.empty_literal_value }
 		'enum_declaration' { NodeType.enum_declaration }
 		'enum_member' { NodeType.enum_member }
@@ -352,6 +358,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'exposed_variables_list' { NodeType.exposed_variables_list }
 		'expression_case' { NodeType.expression_case }
 		'expression_list' { NodeType.expression_list }
+		'field_name' { NodeType.field_name }
 		'fixed_array' { NodeType.fixed_array }
 		'fixed_array_type' { NodeType.fixed_array_type }
 		'fn_literal' { NodeType.fn_literal }
@@ -371,6 +378,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'if_expression' { NodeType.if_expression }
 		'import_alias' { NodeType.import_alias }
 		'import_declaration' { NodeType.import_declaration }
+		'import_list' { NodeType.import_list }
 		'import_symbols' { NodeType.import_symbols }
 		'import_symbols_list' { NodeType.import_symbols_list }
 		'inc_statement' { NodeType.inc_statement }
@@ -407,6 +415,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'qualified_type' { NodeType.qualified_type }
 		'range' { NodeType.range }
 		'raw_string_literal' { NodeType.raw_string_literal }
+		'reference_expression' { NodeType.reference_expression }
 		'result_type' { NodeType.result_type }
 		'return_statement' { NodeType.return_statement }
 		'select_branch' { NodeType.select_branch }
@@ -415,6 +424,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'selector_expression' { NodeType.selector_expression }
 		'send_statement' { NodeType.send_statement }
 		'shared_type' { NodeType.shared_type }
+		'short_element_list' { NodeType.short_element_list }
 		'simple_statement' { NodeType.simple_statement }
 		'slice_expression' { NodeType.slice_expression }
 		'source_file' { NodeType.source_file }

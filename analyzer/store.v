@@ -627,7 +627,7 @@ pub fn (mut ss Store) infer_symbol_from_node(file_path string, node ast.Node, sr
 		}
 		.field_identifier {
 			mut parent := node.parent() or { return error('no parent found') }
-			for parent.type_name in [.keyed_element, .literal_value] {
+			for parent.type_name in [.keyed_element] {
 				parent = parent.parent() or { return error('no parent found') }
 			}
 
@@ -733,7 +733,7 @@ pub fn (mut ss Store) infer_symbol_from_node(file_path string, node ast.Node, sr
 		}
 		.keyed_element {
 			mut parent := node.parent() or { return error('failed to get parent') }
-			if parent.type_name == .literal_value || parent.type_name == .map_ {
+			if parent.type_name == .map_ {
 				parent = parent.parent() or { return error('failed to get parent') }
 			}
 			mut selected_node := node.child_by_field_name('name') or {
@@ -744,7 +744,7 @@ pub fn (mut ss Store) infer_symbol_from_node(file_path string, node ast.Node, sr
 					return error('no value node found')
 				}
 			}
-			if parent.type_name == .literal_value || parent.type_name == .type_initializer {
+			if parent.type_name == .type_initializer {
 				mut parent_sym := ss.infer_symbol_from_node(file_path, parent, src_text)!
 				if parent_sym.kind == .ref {
 					parent_sym = parent_sym.parent_sym

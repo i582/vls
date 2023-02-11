@@ -21,7 +21,7 @@ pub fn convert_file(tree &tree_sitter.Tree[v.NodeType], node TSNode, text tree_s
 		id: counter++
 		node: node
 		module_clause: convert_node(module_clause, text)
-		imports: convert_import_list(node, text)
+		imports: convert_node_field_to[ImportList](node, 'imports', text)
 		stmts: stmts
 	}
 }
@@ -159,14 +159,41 @@ fn convert_node_field_to[T](node TSNode, field_name string, text tree_sitter.Sou
 
 fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 	match node.type_name {
+		.import_list {
+			return convert_import_list(node, text)
+		}
+		.identifier {
+			return convert_identifier(node, text)
+		}
+		.reference_expression {
+			return convert_reference_expression(node, text)
+		}
+		.type_identifier {
+			return convert_type_identifier(node, text)
+		}
+		.type_initializer {
+			return convert_type_initializer(node, text)
+		}
+		.literal_value {
+			return convert_literal_value(node, text)
+		}
+		.field_name {
+			return convert_field_name(node, text)
+		}
+		.element_list {
+			return convert_element_list(node, text)
+		}
+		.short_element_list {
+			return convert_short_element_list(node, text)
+		}
+		.element {
+			return convert_element(node, text)
+		}
 		.block {
 			return convert_block(node, text)
 		}
 		.expression_list {
 			return convert_expression_list(node, text)
-		}
-		.identifier {
-			return convert_identifier(node, text)
 		}
 		.call_expression {
 			return convert_call_expression(node, text)
@@ -236,6 +263,81 @@ fn convert_identifier(node TSNode, text tree_sitter.SourceText) Identifier {
 
 // Expressions
 
+fn convert_reference_expression(node TSNode, text tree_sitter.SourceText) ReferenceExpression {
+	return ReferenceExpression{
+		id: counter++
+		node: node
+		identifier: convert_identifier(field_id(node, 0), text)
+	}
+}
+
+fn convert_type_initializer(node TSNode, text tree_sitter.SourceText) TypeInitializer {
+	return TypeInitializer{
+		id: counter++
+		node: node
+		typ: convert_node_field(node, 'type', text)
+		value: convert_node_field_to[LiteralValue](node, 'body', text)
+	}
+}
+
+fn convert_literal_value(node TSNode, text tree_sitter.SourceText) LiteralValue {
+	return LiteralValue{
+		id: counter++
+		node: node
+		element_list: convert_node_field_to[ElementList](node, 'element_list', text)
+		short_element_list: convert_node_field_to[ShortElementList](node, 'short_element_list', text)
+	}
+}
+
+fn convert_element_list(node TSNode, text tree_sitter.SourceText) ElementList {
+	mut elements := []Element{}
+	mut sibling := node.child(0) or { return ElementList{} }
+	for {
+		if sibling.type_name == .keyed_element {
+			elements << convert_element(sibling, text)
+		}
+		sibling = sibling.next_sibling() or { break }
+	}
+	return ElementList{
+		id: counter++
+		node: node
+		elements: elements
+	}
+}
+
+fn convert_short_element_list(node TSNode, text tree_sitter.SourceText) ShortElementList {
+	mut elements := []Node{}
+	mut sibling := node.child(0) or { return ShortElementList{} }
+	for {
+		if sibling.type_name == .element {
+			elements << convert_node(field_id(sibling, 0), text)
+		}
+		sibling = sibling.next_sibling() or { break }
+	}
+	return ShortElementList{
+		id: counter++
+		node: node
+		elements: elements
+	}
+}
+
+fn convert_element(node TSNode, text tree_sitter.SourceText) Element {
+	return Element{
+		id: counter++
+		node: node
+		key: convert_node_field_to[FieldName](node, 'key', text)
+		value: convert_node_field(node, 'value', text)
+	}
+}
+
+fn convert_field_name(node TSNode, text tree_sitter.SourceText) FieldName {
+	return FieldName{
+		id: counter++
+		node: node
+		expr: convert_node(field_id(node, 0), text)
+	}
+}
+
 fn convert_expression_list(node TSNode, text tree_sitter.SourceText) ExpressionList {
 	mut expressions := []Node{}
 	mut sibling := node.child(0) or { return ExpressionList{} }
@@ -270,7 +372,8 @@ fn convert_var_declaration(node TSNode, text tree_sitter.SourceText) VarDeclarat
 		id: counter++
 		node: node
 		var_list: convert_node_field_to[ExpressionList](node, 'var_list', text)
-		expression_list: convert_node_field_to[ExpressionList](node, 'expression_list', text)
+		expression_list: convert_node_field_to[ExpressionList](node, 'expression_list',
+			text)
 	}
 }
 
@@ -390,6 +493,14 @@ fn convert_argument(node TSNode, text tree_sitter.SourceText) Argument {
 		id: counter++
 		node: node
 		expr: convert_node(node, text)
+	}
+}
+
+fn convert_type_identifier(node TSNode, text tree_sitter.SourceText) TypeName {
+	return TypeName{
+		id: counter++
+		node: node
+		name: convert_identifier(node, text)
 	}
 }
 

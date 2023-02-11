@@ -576,9 +576,9 @@ pub fn (mut an SemanticAnalyzer) binary_expression(node ast.Node, cfg SemanticEx
 }
 
 fn (an &SemanticAnalyzer) check_if_type_field_exists(node ast.Node, name string) bool {
-	if node.type_name != .literal_value {
-		return false
-	}
+	// if node.type_name != .literal_value {
+	// 	return false
+	// }
 
 	mut cursor := new_tree_cursor(node)
 	for child_node in cursor {

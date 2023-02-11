@@ -258,14 +258,7 @@ module.exports = grammar({
     source_file: ($) =>
       seq(
         optional(field("module_clause", $.module_clause)),
-        optional(
-          field(
-            "imports",
-            repeat(
-              $.import_declaration,
-            )
-          )
-        ),
+        optional(field("imports", $.import_list)),
         field(
           "stmts",
           repeat(
@@ -276,6 +269,8 @@ module.exports = grammar({
           ),
         )
       ),
+
+    import_list: ($) => repeat1($.import_declaration),
 
     _top_level_declaration: ($) =>
       choice(
@@ -316,6 +311,8 @@ module.exports = grammar({
       ),
 
     parenthesized_expression: ($) => seq("(", $._expression, ")"),
+
+    reference_expression: ($) => prec(PREC.primary, $.identifier),
 
     unary_expression: ($) =>
       prec(
@@ -481,19 +478,7 @@ module.exports = grammar({
         seq(
           field(
             "type",
-            choice(
-              $.builtin_type,
-              $.type_identifier,
-              $.type_placeholder,
-              $.generic_type,
-              $._binded_type,
-              $.qualified_type,
-              $.pointer_type,
-              $.array_type,
-              $.fixed_array_type,
-              $.map_type,
-              $.channel_type
-            )
+              $._type
           ),
           field("body", $.literal_value)
         )
@@ -504,29 +489,35 @@ module.exports = grammar({
         "{",
         optional(
           choice(
-            repeat(
-              seq(
-                choice($.spread_operator, $.keyed_element),
-                optional(choice(",", terminator))
-              )
-            ),
+            field('element_list', $.element_list),
             // For short struct init syntax
-            seq(
-              $.element,
-              repeat(seq(",", $.element))
-            )
+            field('short_element_list', $.short_element_list)
           )
         ),
         "}"
       ),
 
+    element_list: ($) => repeat1(
+      seq(
+        choice($.spread_operator, $.keyed_element),
+        optional(choice(",", terminator))
+      )
+    ),
+
+    short_element_list: ($) => seq(
+      $.element,
+      repeat(seq(",", $.element))
+    ),
+
     element: ($) => $._expression,
 
     keyed_element: ($) => seq(
-      field("name", $._element_key),
+      field("key", $.field_name),
       ":",
       field("value", $._expression)
     ),
+
+    field_name: ($) => $.reference_expression,
 
     _element_key: ($) =>
       choice(

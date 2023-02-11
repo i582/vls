@@ -284,10 +284,198 @@ fn (d DefaultValue) accept(mut visitor Visitor) bool {
 
 // Expressions
 
-pub struct ExpressionList {
+// ReferenceExpression describes an expression that can be treat as a reference to another node.
+//
+// Example:
+// ```
+// mut foo := 100
+// foo = 200
+// ^^^ reference to the `foo` variable
+// ```
+pub struct ReferenceExpression {
+pub:
+	id         ID
+	node       TSNode
+	identifier Identifier
+}
+
+fn (r ReferenceExpression) accept(mut visitor Visitor) bool {
+	if !visitor.visit(r) {
+		return false
+	}
+
+	if !r.identifier.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// TypeInitializer is `Type{...}`
+pub struct TypeInitializer {
 pub:
 	id    ID
 	node  TSNode
+	typ   Node
+	value LiteralValue
+}
+
+fn (t TypeInitializer) accept(mut visitor Visitor) bool {
+	if !visitor.visit(t) {
+		return false
+	}
+
+	if !t.typ.accept(mut visitor) {
+		return false
+	}
+
+	if !t.value.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// LiteralValue is a `{ ... }` in `Type{ ... }`
+//
+// If it has keys, it's an `element_list`.
+// If it doesn't, it's a `short_element_list`.
+//
+// With fields:
+// ```
+// Type{
+//    foo: int
+//    bar: string
+// }
+// ```
+//
+// Without:
+// ```
+// Type{1, 2, 3}
+// ```
+pub struct LiteralValue {
+pub:
+	id                 ID
+	node               TSNode
+	element_list       ElementList
+	short_element_list ShortElementList
+}
+
+fn (l LiteralValue) accept(mut visitor Visitor) bool {
+	if !visitor.visit(l) {
+		return false
+	}
+
+	if !l.element_list.accept(mut visitor) {
+		return false
+	}
+
+	if !l.short_element_list.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// ElementList is `key: value, key: value, ...`
+//
+// Used in `LiteralValue`.
+pub struct ElementList {
+pub:
+	id       ID
+	node     TSNode
+	elements []Element
+}
+
+fn (e ElementList) accept(mut visitor Visitor) bool {
+	if !visitor.visit(e) {
+		return false
+	}
+
+	for elem in e.elements {
+		if !elem.accept(mut visitor) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ShortElementList is `element, element, ...`
+//
+// Used in `LiteralValue`.
+pub struct ShortElementList {
+pub:
+	id       ID
+	node     TSNode
+	elements []Node
+}
+
+fn (e ShortElementList) accept(mut visitor Visitor) bool {
+	if !visitor.visit(e) {
+		return false
+	}
+
+	for elem in e.elements {
+		if !elem.accept(mut visitor) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Element is `key: value`
+// Used in `ElementList`.
+pub struct Element {
+pub:
+	id    ID
+	node  TSNode
+	key   FieldName
+	value Node
+}
+
+fn (e Element) accept(mut visitor Visitor) bool {
+	if !visitor.visit(e) {
+		return false
+	}
+
+	if !e.key.accept(mut visitor) {
+		return false
+	}
+
+	if !e.value.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// FieldName is `key` in `key: value`
+pub struct FieldName {
+pub:
+	id   ID
+	node TSNode
+	expr Node // ReferenceExpression
+}
+
+fn (f FieldName) accept(mut visitor Visitor) bool {
+	if !visitor.visit(f) {
+		return false
+	}
+
+	if !f.expr.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// ExpressionList is `expr, expr, ...`
+pub struct ExpressionList {
+pub:
+	id          ID
+	node        TSNode
 	expressions []Node
 }
 
@@ -484,7 +672,7 @@ fn (s SimplaStatement) accept(mut visitor Visitor) bool {
 		return false
 	}
 
-	if s.inner or { return true }.accept(mut visitor) {
+	if !s.inner or { return true }.accept(mut visitor) {
 		return false
 	}
 
@@ -561,6 +749,31 @@ interface Type {
 	Node
 	typ()
 	readable_name() string
+}
+
+pub struct TypeName {
+pub:
+	id   ID
+	node TSNode
+	name Identifier
+}
+
+fn (t TypeName) typ() {}
+
+fn (t TypeName) readable_name() string {
+	return t.name.value
+}
+
+fn (t TypeName) accept(mut visitor Visitor) bool {
+	if !visitor.visit(t) {
+		return false
+	}
+
+	if !t.name.accept(mut visitor) {
+		return false
+	}
+
+	return true
 }
 
 pub struct BuiltinType {
