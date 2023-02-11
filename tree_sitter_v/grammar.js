@@ -930,7 +930,7 @@ module.exports = grammar({
         $.inc_statement,
         $.dec_statement,
         $.assignment_statement,
-        $.short_var_declaration
+        $.var_declaration
       ),
 
     inc_statement: ($) => seq($._expression, "++"),
@@ -947,12 +947,12 @@ module.exports = grammar({
         )
       ),
 
-    short_var_declaration: ($) =>
+    var_declaration: ($) =>
       prec.right(
         seq(
-          field("left", $.expression_list),
+          field("var_list", $.expression_list),
           ":=",
-          field("right", $.expression_list)
+          field("expression_list", $.expression_list)
         )
       ),
 
@@ -1270,7 +1270,7 @@ module.exports = grammar({
         if_keyword,
         choice(
           field("condition", $._expression),
-          field("guard", $.short_var_declaration)
+          field("guard", $.var_declaration)
         ),
         field("block", $.block),
         optional(
@@ -1585,7 +1585,7 @@ module.exports = grammar({
         "}"
       ),
 
-    select_branch: ($) => seq(choice($.short_var_declaration), $.block),
+    select_branch: ($) => seq(choice($.var_declaration), $.block),
 
     select_default_branch: ($) =>
       seq(

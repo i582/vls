@@ -43,9 +43,16 @@ fn (n NullNode) accept(mut visitor Visitor) bool {
 	return visitor.visit(n)
 }
 
+fn (n NullNode) str() string {
+	return 'null'
+}
+
+fn (n NullNode) == (other NullNode) bool {
+	return true
+}
+
 pub struct File {
 pub:
-	tree          tree_sitter.Tree[v.NodeType]
 	id            ID
 	node          TSNode
 	module_clause Node
@@ -277,6 +284,27 @@ fn (d DefaultValue) accept(mut visitor Visitor) bool {
 
 // Expressions
 
+pub struct ExpressionList {
+pub:
+	id    ID
+	node  TSNode
+	expressions []Node
+}
+
+fn (e ExpressionList) accept(mut visitor Visitor) bool {
+	if !visitor.visit(e) {
+		return false
+	}
+
+	for expr in e.expressions {
+		if !expr.accept(mut visitor) {
+			return false
+		}
+	}
+
+	return true
+}
+
 pub struct IfExpression {
 pub:
 	id          ID
@@ -305,6 +333,32 @@ fn (i IfExpression) accept(mut visitor Visitor) bool {
 	}
 
 	if !i.else_branch.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// Declarations
+
+pub struct VarDeclaration {
+pub:
+	id              ID
+	node            TSNode
+	var_list        ExpressionList
+	expression_list ExpressionList
+}
+
+fn (var VarDeclaration) accept(mut visitor Visitor) bool {
+	if !visitor.visit(var) {
+		return false
+	}
+
+	if !var.var_list.accept(mut visitor) {
+		return false
+	}
+
+	if !var.expression_list.accept(mut visitor) {
 		return false
 	}
 

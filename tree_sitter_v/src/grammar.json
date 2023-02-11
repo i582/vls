@@ -4780,7 +4780,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "short_var_declaration"
+          "name": "var_declaration"
         }
       ]
     },
@@ -4839,7 +4839,7 @@
         ]
       }
     },
-    "short_var_declaration": {
+    "var_declaration": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -4847,7 +4847,7 @@
         "members": [
           {
             "type": "FIELD",
-            "name": "left",
+            "name": "var_list",
             "content": {
               "type": "SYMBOL",
               "name": "expression_list"
@@ -4859,7 +4859,7 @@
           },
           {
             "type": "FIELD",
-            "name": "right",
+            "name": "expression_list",
             "content": {
               "type": "SYMBOL",
               "name": "expression_list"
@@ -6608,10 +6608,10 @@
             },
             {
               "type": "FIELD",
-              "name": "initializer",
+              "name": "guard",
               "content": {
                 "type": "SYMBOL",
-                "name": "short_var_declaration"
+                "name": "var_declaration"
               }
             }
           ]
@@ -8374,7 +8374,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "short_var_declaration"
+              "name": "var_declaration"
             }
           ]
         },

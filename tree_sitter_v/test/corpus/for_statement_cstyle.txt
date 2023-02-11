@@ -17,7 +17,7 @@ fn main() {
     (block
       (for_statement
         (cstyle_for_clause
-          (short_var_declaration
+          (var_declaration
             (expression_list (identifier))
             (expression_list (int_literal)))
           (binary_expression (identifier) (int_literal))
@@ -40,7 +40,7 @@ for i := 0; i < start_column; {
 (source_file
   (for_statement
     (cstyle_for_clause
-      (short_var_declaration
+      (var_declaration
         (expression_list (identifier))
         (expression_list (int_literal)))
       (binary_expression (identifier) (identifier)))

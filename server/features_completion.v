@@ -78,7 +78,7 @@ fn (mut builder CompletionBuilder) build_suggestions_from_node(node ast.Node) {
 // suggestions_from_stmt returns a list of results from the extracted Stmt node info.
 fn (mut builder CompletionBuilder) build_suggestions_from_stmt(node ast.Node) {
 	match node.type_name {
-		.short_var_declaration {
+		.var_declaration {
 			builder.show_local = true
 			builder.show_global = true
 		}
@@ -645,7 +645,7 @@ pub fn (mut ls Vls) completion(params lsp.CompletionParams, mut wr ResponseWrite
 
 	uri := params.text_document.uri.normalize()
 	file := ls.files[uri]
-	root_node := file.tree.tree.root_node()
+	root_node := ast.Node(file.tree.node)
 	pos := params.position
 	mut offset := file.get_offset(pos.line, pos.character)
 	if offset == -1 {

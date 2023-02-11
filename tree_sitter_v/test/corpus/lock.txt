@@ -54,7 +54,7 @@ x := rlock a, b { a + b }
 ---
 
 (source_file
-  (short_var_declaration
+  (var_declaration
     (expression_list
       (identifier))
     (expression_list

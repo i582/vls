@@ -21,7 +21,7 @@ fn main() {
           (identifier))
         (expression_list
           (int_literal)))
-      (short_var_declaration
+      (var_declaration
         (expression_list
           (identifier))
         (expression_list
@@ -33,7 +33,7 @@ fn main() {
         (expression_list
           (int_literal)
           (int_literal)))
-      (short_var_declaration
+      (var_declaration
         (expression_list
           (identifier)
           (identifier))
@@ -51,7 +51,7 @@ mut ap := &u64(a)
 ---
 
 (source_file 
-  (short_var_declaration 
+  (var_declaration
     (expression_list 
     (mutable_expression (identifier))) 
     (expression_list 

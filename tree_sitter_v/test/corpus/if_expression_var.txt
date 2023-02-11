@@ -16,7 +16,7 @@ fn main() {
     (parameter_list)
     (block
       (if_expression
-        (short_var_declaration
+        (var_declaration
           (expression_list (identifier))
           (expression_list 
             (call_expression

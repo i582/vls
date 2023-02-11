@@ -26,12 +26,12 @@ fn main() {
           (call_expression 
             (selector_expression (identifier) (identifier)) 
             (argument_list))))
-      (short_var_declaration
+      (var_declaration
         (expression_list (identifier))
         (expression_list
           (unsafe_expression
             (block (int_literal))))) 
-      (short_var_declaration 
+      (var_declaration
         (expression_list (identifier)) 
         (expression_list 
           (type_initializer 
@@ -64,7 +64,7 @@ Unsafe Expression with Pointer assignment
   (block 
     (unsafe_expression 
       (block 
-        (short_var_declaration 
+        (var_declaration
           (expression_list (identifier)) 
           (expression_list 
             (unary_expression 

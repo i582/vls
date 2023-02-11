@@ -5,7 +5,7 @@ import tree_sitter_v as v
 
 __global counter = 0
 
-pub fn convert_file(tree tree_sitter.Tree[v.NodeType], node TSNode, text tree_sitter.SourceText) File {
+pub fn convert_file(tree &tree_sitter.Tree[v.NodeType], node TSNode, text tree_sitter.SourceText) File {
 	module_clause := field_opt(node, 'module_clause') or { TSNode{} }
 
 	stmts_node := field(node, 'stmts')
@@ -19,7 +19,6 @@ pub fn convert_file(tree tree_sitter.Tree[v.NodeType], node TSNode, text tree_si
 
 	return File{
 		id: counter++
-		tree: tree
 		node: node
 		module_clause: convert_node(module_clause, text)
 		imports: convert_import_list(node, text)
@@ -149,10 +148,22 @@ fn convert_node_field(node TSNode, field_name string, text tree_sitter.SourceTex
 	return convert_node(field, text)
 }
 
+fn convert_node_field_to[T](node TSNode, field_name string, text tree_sitter.SourceText) &T {
+	field := field_opt(node, field_name) or { return &T{} }
+	converted := convert_node(field, text)
+	if converted is T {
+		return converted
+	}
+	return &T{}
+}
+
 fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 	match node.type_name {
 		.block {
 			return convert_block(node, text)
+		}
+		.expression_list {
+			return convert_expression_list(node, text)
 		}
 		.identifier {
 			return convert_identifier(node, text)
@@ -165,6 +176,9 @@ fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 		}
 		.literal {
 			return convert_literal(node, text)
+		}
+		.var_declaration {
+			return convert_var_declaration(node, text)
 		}
 		.function_declaration {
 			return convert_function_declaration(node, text)
@@ -220,6 +234,24 @@ fn convert_identifier(node TSNode, text tree_sitter.SourceText) Identifier {
 	}
 }
 
+// Expressions
+
+fn convert_expression_list(node TSNode, text tree_sitter.SourceText) ExpressionList {
+	mut expressions := []Node{}
+	mut sibling := node.child(0) or { return ExpressionList{} }
+	for {
+		if sibling.is_named() {
+			expressions << convert_node(sibling, text)
+		}
+		sibling = sibling.next_sibling() or { break }
+	}
+	return ExpressionList{
+		id: counter++
+		node: node
+		expressions: expressions
+	}
+}
+
 fn convert_if_expression(node TSNode, text tree_sitter.SourceText) IfExpression {
 	return IfExpression{
 		id: counter++
@@ -228,6 +260,17 @@ fn convert_if_expression(node TSNode, text tree_sitter.SourceText) IfExpression 
 		guard: convert_node_field(node, 'guard', text)
 		block: convert_node_field(node, 'block', text)
 		else_branch: convert_node_field(node, 'else_branch', text)
+	}
+}
+
+// Declarations
+
+fn convert_var_declaration(node TSNode, text tree_sitter.SourceText) VarDeclaration {
+	return VarDeclaration{
+		id: counter++
+		node: node
+		var_list: convert_node_field_to[ExpressionList](node, 'var_list', text)
+		expression_list: convert_node_field_to[ExpressionList](node, 'expression_list', text)
 	}
 }
 

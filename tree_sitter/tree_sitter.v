@@ -1,8 +1,11 @@
 module tree_sitter
 
-#include "@VMODROOT/tree_sitter/lib/api.h"
 #flag -I@VMODROOT/tree_sitter/lib
-#flag @VMODROOT/tree_sitter/lib/lib.o
+// #flag @VMODROOT/tree_sitter/lib/lib.o
+#flag -L @VMODROOT/tree_sitter/lib
+#flag -lts
+#flag -I @VMODROOT/tree_sitter/lib
+#include "api.h"
 
 // Input
 enum TSVInputEncoding {

@@ -118,7 +118,6 @@ pub enum NodeType {
 	selector_expression
 	send_statement
 	shared_type
-	short_var_declaration
 	simple_statement
 	slice_expression
 	source_file
@@ -142,6 +141,7 @@ pub enum NodeType {
 	type_selector_expression
 	unary_expression
 	unsafe_expression
+	var_declaration
 	escape_sequence
 	false_
 	field_identifier
@@ -273,11 +273,11 @@ const declaration_node_types = [
 	.import_declaration,
 	.interface_declaration,
 	.parameter_declaration,
-	.short_var_declaration,
 	.struct_declaration,
 	.struct_field_declaration,
 	.type_declaration,
-	.type_parameter_declaration
+	.type_parameter_declaration,
+	.var_declaration
 ]
 
 const identifier_node_types = [
@@ -415,7 +415,6 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'selector_expression' { NodeType.selector_expression }
 		'send_statement' { NodeType.send_statement }
 		'shared_type' { NodeType.shared_type }
-		'short_var_declaration' { NodeType.short_var_declaration }
 		'simple_statement' { NodeType.simple_statement }
 		'slice_expression' { NodeType.slice_expression }
 		'source_file' { NodeType.source_file }
@@ -439,6 +438,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'type_selector_expression' { NodeType.type_selector_expression }
 		'unary_expression' { NodeType.unary_expression }
 		'unsafe_expression' { NodeType.unsafe_expression }
+		'var_declaration' { NodeType.var_declaration }
 		'escape_sequence' { NodeType.escape_sequence }
 		'false' { NodeType.false_ }
 		'field_identifier' { NodeType.field_identifier }

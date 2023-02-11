@@ -20,7 +20,7 @@ fn main() {
         (identifier)
         (argument_list 
           (type_selector_expression (identifier))))
-      (short_var_declaration
+      (var_declaration
         (expression_list (identifier))
         (expression_list
           (type_initializer
@@ -29,7 +29,7 @@ fn main() {
               (keyed_element
                 (field_identifier) 
                   (type_selector_expression (identifier)))))))
-      (short_var_declaration
+      (var_declaration
         (expression_list
           (mutable_expression (identifier)))
         (expression_list

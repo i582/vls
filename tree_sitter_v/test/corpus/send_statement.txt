@@ -8,7 +8,7 @@ ch <- n
 ---
 
 (source_file 
-  (short_var_declaration 
+  (var_declaration
     (expression_list (identifier)) 
     (expression_list 
       (type_initializer 

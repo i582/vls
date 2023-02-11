@@ -326,7 +326,7 @@ pub fn (mut an SemanticAnalyzer) block(node ast.Node) {
 	}
 }
 
-pub fn (mut an SemanticAnalyzer) short_var_declaration(node ast.Node) ? {
+pub fn (mut an SemanticAnalyzer) var_declaration(node ast.Node) ? {
 	right := node.child_by_field_name('right')?
 	right_count := right.named_child_count()
 	for i in u32(0) .. right_count {
@@ -470,8 +470,8 @@ pub fn (mut an SemanticAnalyzer) statement(node ast.Node) {
 		.send_statement {
 			an.send_statement(node) or {}
 		}
-		.short_var_declaration {
-			an.short_var_declaration(node) or {}
+		.var_declaration {
+			an.var_declaration(node) or {}
 		}
 		.break_statement {
 			an.break_statement(node)

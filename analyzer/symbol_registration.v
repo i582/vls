@@ -553,7 +553,7 @@ fn (mut sr SymbolAnalyzer) top_level_decl(current_node ast.Node) ![]&Symbol {
 		}
 		else {
 			stmt_node := current_node
-			if node_type_name == .short_var_declaration {
+			if node_type_name == .var_declaration {
 				sr.is_script = true
 				sr.first_var_decl_pos = stmt_node.range()
 
@@ -564,7 +564,7 @@ fn (mut sr SymbolAnalyzer) top_level_decl(current_node ast.Node) ![]&Symbol {
 			}
 
 			syms := sr.statement(stmt_node, mut global_scope)!
-			if node_type_name == .short_var_declaration {
+			if node_type_name == .var_declaration {
 				return syms
 			}
 
@@ -1007,7 +1007,7 @@ fn (mut sr SymbolAnalyzer) statement(node ast.Node, mut scope ScopeTree) ![]&Sym
 			mut local_scope := sr.get_scope(block_node) or { &ScopeTree(0) }
 			sr.extract_block(block_node, mut local_scope)!
 		}
-		.short_var_declaration {
+		.var_declaration {
 			vars := sr.short_var_decl(node)!
 			for var in vars {
 				scope.register(var) or { continue }

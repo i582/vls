@@ -34,9 +34,9 @@ fn (mut ls Vls) analyze_file(file File, affected_node_type v.NodeType, affected_
 		]
 	)
 
-	is_import := affected_node_type == .import_declaration
-	file_path := file.uri.path()
-	context := ls.store.with(file_path: file_path, file_version: file.version, text: file.source)
+	// is_import := affected_node_type == .import_declaration
+	// file_path := file.uri.path()
+	// context := ls.store.with(file_path: file_path, file_version: file.version, text: file.source)
 
 	// skip analyzing imports when affected is not an import declaration
 	// if is_import || affected_line == 0 {
@@ -159,7 +159,7 @@ pub fn (mut ls Vls) did_change(params lsp.DidChangeTextDocumentParams, mut wr Re
 	// 	u32(params.content_changes.first().range.start.line), u32(params.content_changes.last().range.start.line))
 
 	mut new_src := ls.files[uri].source
-	mut new_tree := ls.files[uri].tree.tree.raw_tree.copy()
+	// mut new_tree := ls.files[uri].tree.tree.raw_tree.copy()
 	mut first_affected_start_offset := u32(0)
 
 	for change_i, content_change in params.content_changes {
@@ -188,21 +188,21 @@ pub fn (mut ls Vls) did_change(params lsp.DidChangeTextDocumentParams, mut wr Re
 			change_text)
 
 		// edit the tree
-		new_tree.edit(
-			start_byte: u32(start_idx)
-			old_end_byte: u32(old_end_idx)
-			new_end_byte: u32(new_end_idx)
-			start_point: lsp_pos_to_tspoint(start_pos)
-			old_end_point: lsp_pos_to_tspoint(old_end_pos)
-			new_end_point: lsp_pos_to_tspoint(new_end_pos)
-		)
+		// new_tree.edit(
+		// 	start_byte: u32(start_idx)
+		// 	old_end_byte: u32(old_end_idx)
+		// 	new_end_byte: u32(new_end_idx)
+		// 	start_point: lsp_pos_to_tspoint(start_pos)
+		// 	old_end_point: lsp_pos_to_tspoint(old_end_pos)
+		// 	new_end_point: lsp_pos_to_tspoint(new_end_pos)
+		// )
 	}
 
 	new_src = new_src.rebalance_if_needed()
 	// wr.log_message('${ls.files[uri].tree.get_changed_ranges(new_tree)}', .info)
 
 	// wr.log_message('new tree: ${new_tree.tree.root_node().sexpr_str()}', .info)
-	tree := ls.parser.parse_string(source: new_src.string(), tree: new_tree)
+	tree := ls.parser.parse_string(source: new_src.string())
 	root := tree.root_node()
 	file := ir.convert_file(tree, root, new_src)
 

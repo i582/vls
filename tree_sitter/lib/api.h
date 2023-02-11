@@ -37,6 +37,13 @@ typedef uint16_t TSSymbol;
 typedef uint16_t TSFieldId;
 typedef struct TSLanguage TSLanguage;
 typedef struct TSParser TSParser;
+//typedef union Subtree Subtree;
+//typedef struct TSTree {
+//    Subtree root;
+//    const TSLanguage *language;
+//    TSRange *included_ranges;
+//    unsigned included_range_count;
+//} TSTree;
 typedef struct TSTree TSTree;
 typedef struct TSQuery TSQuery;
 typedef struct TSQueryCursor TSQueryCursor;

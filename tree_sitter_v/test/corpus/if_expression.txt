@@ -60,7 +60,7 @@ fn foo() (int, int) {
     (multi_return_type 
       (builtin_type) (builtin_type)) 
     (block 
-      (short_var_declaration 
+      (var_declaration
         (expression_list 
           (identifier) (identifier)) 
         (expression_list 
@@ -71,7 +71,7 @@ fn foo() (int, int) {
             (block 
               (expression_list 
                 (int_literal) (int_literal)))))) 
-      (short_var_declaration 
+      (var_declaration
         (expression_list 
           (identifier) (identifier)) 
         (expression_list 
@@ -100,7 +100,7 @@ fn main() {
     (identifier)
     (parameter_list)
     (block
-      (short_var_declaration
+      (var_declaration
         (expression_list
           (identifier)
           (identifier))

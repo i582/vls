@@ -4,6 +4,7 @@ import lsp
 import term
 import analyzer { Report, ReportKind, ReporterPreferences }
 import os
+import ast
 
 struct DiagnosticReporter {
 mut:
@@ -160,7 +161,7 @@ fn (mut ls Vls) exec_v_diagnostics(uri lsp.DocumentUri) ?int {
 		}
 
 		if file := ls.files[report.file_path] {
-			root_node := file.tree.tree.root_node()
+			root_node := ast.Node(file.tree.node)
 			node_point := report.range.start_point
 			if target_node := root_node.descendant_for_point_range(node_point, node_point) {
 				report = Report{

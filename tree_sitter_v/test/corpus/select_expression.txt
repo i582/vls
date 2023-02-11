@@ -44,7 +44,7 @@ fn main() {
     (block 
       (select_expression 
         (select_branch 
-          (short_var_declaration 
+          (var_declaration
             (expression_list (identifier)) 
             (expression_list (unary_expression (identifier)))) 
           (block 

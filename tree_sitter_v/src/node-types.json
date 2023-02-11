@@ -1846,12 +1846,12 @@
           }
         ]
       },
-      "initializer": {
+      "guard": {
         "multiple": false,
         "required": false,
         "types": [
           {
-            "type": "short_var_declaration",
+            "type": "var_declaration",
             "named": true
           }
         ]
@@ -2758,7 +2758,7 @@
           "named": true
         },
         {
-          "type": "short_var_declaration",
+          "type": "var_declaration",
           "named": true
         }
       ]
@@ -2897,32 +2897,6 @@
     }
   },
   {
-    "type": "short_var_declaration",
-    "named": true,
-    "fields": {
-      "left": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "expression_list",
-            "named": true
-          }
-        ]
-      },
-      "right": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "expression_list",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "simple_statement",
     "named": true,
     "fields": {},
@@ -2947,7 +2921,7 @@
           "named": true
         },
         {
-          "type": "short_var_declaration",
+          "type": "var_declaration",
           "named": true
         }
       ]
@@ -3619,6 +3593,32 @@
     }
   },
   {
+    "type": "var_declaration",
+    "named": true,
+    "fields": {
+      "expression_list": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression_list",
+            "named": true
+          }
+        ]
+      },
+      "var_list": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression_list",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "\n",
     "named": false
   },
@@ -4016,11 +4016,11 @@
   },
   {
     "type": "int_literal",
-    "named": false
+    "named": true
   },
   {
     "type": "int_literal",
-    "named": true
+    "named": false
   },
   {
     "type": "interface",

@@ -129,10 +129,6 @@ fn (mut a ArgumentMismatchInspection) visit(node ir.Node) bool {
 				}
 			}
 		}
-		ir.IfExpression {
-			println('if')
-			// aaaa := node.str()
-		}
 		else {}
 	}
 	return true
@@ -201,12 +197,12 @@ fn main() {
 	
 	
 	fn main() {
-		if 1 {
-		
+		if a := 100 {
+			println("1")
 		} else if 2 {
-		
+			println("2")
 		} else {
-		
+			println("else")
 		}
 	}
 	'.trim_indent()
@@ -219,6 +215,7 @@ fn main() {
 	root := tree.root_node()
 	println(root)
 	file := ir.convert_file(tree, root, rope)
+	println(file)
 
 	mut resolver := SymbolRegistrator{}
 	file.accept(mut resolver)
