@@ -2,6 +2,7 @@ module main
 
 import ir
 import parser
+import time
 
 // // TODO: make this return !, after `cli` is changed too
 // fn run_cli(cmd cli.Command) ! {
@@ -244,7 +245,6 @@ struct Context {
 }
 
 fn main() {
-
 	code := '
 	
 	struct Foo {
@@ -263,9 +263,18 @@ fn main() {
 	// take_int(f)
 	'.trim_indent()
 
-	file := parser.parse_code(code)
-	println(file.node)
-	println(file)
+	mut start := time.now()
+	file, tree := parser.parse_code_with_tree(code, unsafe { nil })
+	println('parse time: ${time.now() - start}')
+
+	new_code := code.replace("take_int", "take_int2")
+
+	start = time.now()
+	file2, _ := parser.parse_code_with_tree(new_code, tree)
+	println('reparse time: ${time.now() - start}')
+
+	// println(file.node)
+	// println(file)
 
 	mut resolver := SymbolRegistrator{}
 	file.accept(mut resolver)
@@ -304,11 +313,11 @@ fn main() {
 		file.accept(mut visitor)
 	}
 
-	for inspection in inspections {
-		for error in inspection.errors {
-			println(error)
-		}
-	}
+	// for inspection in inspections {
+	// 	for error in inspection.errors {
+	// 		println(error)
+	// 	}
+	// }
 
 	// mut cmd := cli.Command{
 	// 	name: 'vls'

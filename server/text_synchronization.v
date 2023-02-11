@@ -5,6 +5,7 @@ import os
 import structures.ropes
 import tree_sitter_v as v
 import ir
+import tree_sitter
 
 fn (mut ls Vls) analyze_file(file File, affected_node_type v.NodeType, affected_line u32) {
 	if Feature.v_diagnostics in ls.enabled_features {
@@ -132,7 +133,7 @@ pub fn (mut ls Vls) did_open(params lsp.DidOpenTextDocumentParams, mut wr Respon
 
 	rope := ropes.new(source_str)
 
-	mut parser := ir.new_parser()
+	mut parser := tree_sitter.new_parser[v.NodeType](v.language, v.type_factory)
 	tree := parser.parse_string(source: source_str)
 	root := tree.root_node()
 	file := ir.convert_file(tree, root, rope)
