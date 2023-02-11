@@ -122,7 +122,7 @@ fn (mut a ArgumentMismatchInspection) visit(node ir.Node) bool {
 			name := node.name.value
 			fun := a.ctx.symbols.functions[name] or { return true }
 			arguments_count := node.args.args.len
-			arguments_count_expected := fun.parameters.parameters.len
+			arguments_count_expected := fun.signature.parameters.parameters.len
 
 			if arguments_count != arguments_count_expected {
 				a.errors << '
@@ -149,7 +149,7 @@ fn (mut a MismatchTypeInspection) visit(node ir.Node) bool {
 			fun := a.ctx.symbols.functions[name] or { return true }
 
 			argument_types := node.args.args.map(a.ctx.types[it.expr.id])
-			parameter_types := fun.parameters.parameters.map(it.typ.readable_name())
+			parameter_types := fun.signature.parameters.parameters.map(it.typ.readable_name())
 
 			for i in 0 .. argument_types.len {
 				if argument_types[i] != parameter_types[i] {
@@ -200,6 +200,32 @@ fn (mut m TypeInferrer) visit(node ir.Node) bool {
 	return true
 }
 
+struct UnknownFieldInspection {
+	ctx Context
+mut:
+	errors []string
+}
+
+fn (mut a UnknownFieldInspection) visit(node ir.Node) bool {
+	match node {
+		ir.TypeInitializer {
+			typ := node.typ as ir.Type
+			name := typ.readable_name()
+			struct_ := a.ctx.symbols.structs[name] or { return true }
+			fields := struct_.field_list().map(it.name.value)
+			for element in node.value.element_list.elements {
+				if element.key.name() !in fields {
+					a.errors << '
+					Unknown field ${element.key.name()} for struct ${name}
+					'.trim_indent()
+				}
+			}
+		}
+		else {}
+	}
+	return true
+}
+
 interface Inspection {
 	ir.Visitor
 	errors []string
@@ -224,14 +250,16 @@ fn main() {
 		name string
 	}
 
-	fn take_int(i int) {
+	fn take_int(i int) int {
+		return 100, 200
 	}
 
 	f := Foo{
 		name: "foo"
+		blabla: 100
 	}
 	
-	take_int(f)
+	// take_int(f)
 	'.trim_indent()
 	rope := ropes.new(code)
 
@@ -239,9 +267,9 @@ fn main() {
 	tree := parser.parse_string(source: code)
 
 	root := tree.root_node()
-	// println(root)
+	println(root)
 	file := ir.convert_file(tree, root, rope)
-	// println(file)
+	println(file)
 
 	mut resolver := SymbolRegistrator{}
 	file.accept(mut resolver)
@@ -261,6 +289,9 @@ fn main() {
 		ctx: ctx
 	}
 	inspections << MismatchTypeInspection{
+		ctx: ctx
+	}
+	inspections << UnknownFieldInspection{
 		ctx: ctx
 	}
 

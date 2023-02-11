@@ -195,6 +195,14 @@ pub:
 	groups []StructFieldsGroup
 }
 
+pub fn (s StructDeclaration) field_list() []FieldDeclaration {
+	mut fields := []FieldDeclaration{}
+	for group in s.groups {
+		fields << group.fields_
+	}
+	return fields
+}
+
 fn (s StructDeclaration) accept(mut visitor Visitor) bool {
 	if !visitor.visit(s) {
 		return false
@@ -459,6 +467,13 @@ pub:
 	expr Node // ReferenceExpression
 }
 
+pub fn (f FieldName) name() string {
+	if f.expr is ReferenceExpression {
+		return f.expr.identifier.value
+	}
+	return ''
+}
+
 fn (f FieldName) accept(mut visitor Visitor) bool {
 	if !visitor.visit(f) {
 		return false
@@ -566,11 +581,11 @@ fn (i Identifier) accept(mut visitor Visitor) bool {
 
 pub struct FunctionDeclaration {
 pub:
-	id         ID
-	node       TSNode
-	name       Identifier
-	parameters ParameterList
-	block      Block
+	id        ID
+	node      TSNode
+	name      Identifier
+	signature Signature
+	block     Block
 }
 
 fn (f FunctionDeclaration) accept(mut visitor Visitor) bool {
@@ -582,11 +597,37 @@ fn (f FunctionDeclaration) accept(mut visitor Visitor) bool {
 		return false
 	}
 
-	if !f.parameters.accept(mut visitor) {
+	if !f.signature.accept(mut visitor) {
 		return false
 	}
 
 	if !f.block.accept(mut visitor) {
+		return false
+	}
+
+	return true
+}
+
+// Signature is `(param1, param2, ...) type`
+// Used in `FunctionDeclaration`.
+pub struct Signature {
+pub:
+	id         ID
+	node       TSNode
+	parameters ParameterList
+	result     Node // Type
+}
+
+fn (s Signature) accept(mut visitor Visitor) bool {
+	if !visitor.visit(s) {
+		return false
+	}
+
+	if !s.parameters.accept(mut visitor) {
+		return false
+	}
+
+	if !s.result.accept(mut visitor) {
 		return false
 	}
 
@@ -655,6 +696,28 @@ fn (b Block) accept(mut visitor Visitor) bool {
 		if !stmt.accept(mut visitor) {
 			return false
 		}
+	}
+
+	return true
+}
+
+// Statements
+
+// ReturnStatement is `return expr, expr, ...`
+pub struct ReturnStatement {
+pub:
+	id              ID
+	node            TSNode
+	expression_list ExpressionList
+}
+
+fn (r ReturnStatement) accept(mut visitor Visitor) bool {
+	if !visitor.visit(r) {
+		return false
+	}
+
+	if !r.expression_list.accept(mut visitor) {
+		return false
 	}
 
 	return true

@@ -171,6 +171,9 @@ fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 		.type_identifier {
 			return convert_type_identifier(node, text)
 		}
+		.builtin_type {
+			return convert_builtin_type(node, text)
+		}
 		.type_initializer {
 			return convert_type_initializer(node, text)
 		}
@@ -210,8 +213,14 @@ fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 		.function_declaration {
 			return convert_function_declaration(node, text)
 		}
+		.signature {
+			return convert_signature(node, text)
+		}
 		.parameter_declaration {
 			return convert_parameter_declaration(node, text)
+		}
+		.parameter_list {
+			return convert_parameter_list(node, text)
 		}
 		.struct_declaration {
 			return convert_struct_declaration(node, text)
@@ -221,6 +230,12 @@ fn convert_node(node TSNode, text tree_sitter.SourceText) Node {
 		}
 		.if_expression {
 			return convert_if_expression(node, text)
+		}
+		.return_statement {
+			return convert_return_statement(node, text)
+		}
+		.simple_statement {
+			return convert_simple_statement(node, text)
 		}
 		else {
 			return null_node
@@ -285,7 +300,8 @@ fn convert_literal_value(node TSNode, text tree_sitter.SourceText) LiteralValue 
 		id: counter++
 		node: node
 		element_list: convert_node_field_to[ElementList](node, 'element_list', text)
-		short_element_list: convert_node_field_to[ShortElementList](node, 'short_element_list', text)
+		short_element_list: convert_node_field_to[ShortElementList](node, 'short_element_list',
+			text)
 	}
 }
 
@@ -378,16 +394,21 @@ fn convert_var_declaration(node TSNode, text tree_sitter.SourceText) VarDeclarat
 }
 
 pub fn convert_function_declaration(node TSNode, text tree_sitter.SourceText) FunctionDeclaration {
-	name := convert_identifier(field(node, 'name'), text)
-	parameters_node := field(node, 'parameters')
-	parameters := convert_parameter_list(parameters_node, text)
-	block := convert_block(field(node, 'body'), text)
 	return FunctionDeclaration{
 		id: counter++
 		node: node
-		name: name
-		parameters: parameters
-		block: block
+		name: convert_node_field_to[Identifier](node, 'name', text)
+		signature: convert_node_field_to[Signature](node, 'signature', text)
+		block: convert_node_field_to[Block](node, 'body', text)
+	}
+}
+
+fn convert_signature(node TSNode, text tree_sitter.SourceText) Signature {
+	return Signature{
+		id: counter++
+		node: node
+		parameters: convert_node_field_to[ParameterList](node, 'parameters', text)
+		result: convert_node_field(node, 'result', text)
 	}
 }
 
@@ -450,6 +471,17 @@ fn convert_stmt(node TSNode, text tree_sitter.SourceText) ?Node {
 	}
 
 	return none
+}
+
+// Statements
+
+fn convert_return_statement(node TSNode, text tree_sitter.SourceText) ReturnStatement {
+	return ReturnStatement{
+		id: counter++
+		node: node
+		expression_list: convert_node_field_to[ExpressionList](node, 'expression_list',
+			text)
+	}
 }
 
 fn convert_simple_statement(node TSNode, text tree_sitter.SourceText) SimplaStatement {

@@ -123,6 +123,7 @@ pub enum NodeType {
 	send_statement
 	shared_type
 	short_element_list
+	signature
 	simple_statement
 	slice_expression
 	source_file
@@ -425,6 +426,7 @@ pub fn (nf VNodeTypeFactory) get_type(type_name string) NodeType {
 		'send_statement' { NodeType.send_statement }
 		'shared_type' { NodeType.shared_type }
 		'short_element_list' { NodeType.short_element_list }
+		'signature' { NodeType.signature }
 		'simple_statement' { NodeType.simple_statement }
 		'slice_expression' { NodeType.slice_expression }
 		'source_file' { NodeType.source_file }

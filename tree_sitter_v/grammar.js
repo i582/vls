@@ -996,23 +996,29 @@ module.exports = grammar({
           ),
           field("type_parameters", optional($.type_parameters)),
           field(
-            "parameters",
-            choice($.parameter_list, $.type_only_parameter_list)
+            "signature",
+            $.signature
           ),
-          field("result", optional($._type)),
           field("body", optional($.block))
         )
       ),
+
+    signature: ($) => prec.right(seq(
+        field(
+          "parameters",
+          choice($.parameter_list, $.type_only_parameter_list)
+        ),
+        field("result", optional($._type)),
+    )),
 
     function_type: ($) =>
       prec.right(
         seq(
           fn_keyword,
           field(
-            "parameters",
-            choice($.parameter_list, $.type_only_parameter_list)
+            "signature",
+            $.signature
           ),
-          field("result", optional($._type))
         )
       ),
 
@@ -1031,8 +1037,7 @@ module.exports = grammar({
         seq(
           fn_keyword,
           field("exposed_variables", optional($.exposed_variables_list)),
-          field("parameters", $.parameter_list),
-          field("result", optional($._type)),
+          field("signature", $.signature),
           field("body", $.block),
           field("arguments", optional($.argument_list))
         )
@@ -1096,7 +1101,7 @@ module.exports = grammar({
       prec.right(seq("continue", optional(alias($.identifier, $.label_name)))),
 
     return_statement: ($) =>
-      prec.right(seq(return_keyword, optional($.expression_list))),
+      prec.right(seq(return_keyword, optional(field("expression_list", $.expression_list)))),
 
     type_declaration: ($) =>
       seq(
